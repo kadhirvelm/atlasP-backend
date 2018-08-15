@@ -1,0 +1,25 @@
+version: "2"
+services:
+    atlasp:
+        build: .
+        container_name: atlasp_server
+        image: debian/latest
+        environment:
+            - NODE_ENV=production
+        volumes:
+            - .:/var/www:rw
+        ports:
+            - 3001:3001
+        links:
+            - mongodb
+        depends_on:
+            - mongodb
+    mongodb:
+      container_name: atlasp_database
+      image: mongo
+      ports:
+        - 27017:27017
+      volumes:
+        - data:/data/db
+volumes:
+  data:
