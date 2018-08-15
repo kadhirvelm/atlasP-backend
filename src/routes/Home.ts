@@ -1,9 +1,9 @@
 import { PureRouter } from "../config/consts";
 
 /**
- * PATH ROOT: /users
+ * PATH ROOT: /home
  */
-class PureUsers extends PureRouter {
+class PureHome extends PureRouter {
   constructor() {
     super();
     this.mountRoutes();
@@ -12,11 +12,10 @@ class PureUsers extends PureRouter {
   private mountRoutes() {
     this.router.get("/", (req, res) => {
       res.json({
-        message: "No users found",
-        payload: []
+        message: `AtlasP Backend Running - V${process.env.npm_package_version}`
       });
     });
   }
 }
 
-export const UsersRoutes = new PureUsers().router;
+export const HomeRoutes = new PureHome().router;
