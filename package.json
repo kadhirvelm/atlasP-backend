@@ -1,0 +1,9 @@
+{
+  "name": "atlasP-backend",
+  "version": "0.1.0",
+  "description": "Atlasp's backend",
+  "main": "index.js",
+  "repository": "https://github.com/kadhirvelm/atlasP-backend.git",
+  "author": "kadhirvelm <kadhirvelm@berkeley.edu>",
+  "license": "MIT"
+}
