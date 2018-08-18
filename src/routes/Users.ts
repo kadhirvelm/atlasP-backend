@@ -13,7 +13,7 @@ class PureUsers extends PureRouter {
     this.router.get("/", (req, res) => {
       res.json({
         message: "No users found",
-        payload: []
+        payload: [],
       });
     });
   }

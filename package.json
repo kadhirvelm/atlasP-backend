@@ -18,7 +18,8 @@
     "dev": "tsc --watch & nodemon dist",
     "run": "tsc && node dist",
     "lint": "eslint src --ext ts && tslint src/**/*",
-    "lint:fix": "eslint src --ext ts --fix && tslint src/**/* --fix && prettier src/**/* --write",
+    "lint:fix": "eslint src --ext ts --fix && tslint src/**/* --fix",
+    "prettier": "prettier src/**/* --write",
     "test": "yarn build && mocha dist/**/*.spec.js"
   },
   "devDependencies": {
