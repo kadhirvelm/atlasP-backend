@@ -40,6 +40,6 @@ workflows:
       - build
       - lint
       - deploy:
-        requires:
-          - build
-          - lint
+          requires:
+            - build
+            - lint
