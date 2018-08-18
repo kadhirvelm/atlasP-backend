@@ -31,7 +31,8 @@ jobs:
       - run: ssh $SERVER
       - run: cd ./atlasP-backend
       - run: sudo docker kill $(docker ps -a -q)
-      - run: sudo docker-compose build && sudo docker-compose up
+      - run: sudo docker-compose build && sudo docker-compose up --detach
+      - run: exit
 workflows:
   version: 2
   build:
