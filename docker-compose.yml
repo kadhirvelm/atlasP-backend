@@ -10,7 +10,7 @@ services:
         volumes:
             - .:/var/www:rw
         ports:
-            - 81:81
+            - 3001:3001
         links:
             - mongodb
         depends_on:
