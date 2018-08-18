@@ -30,7 +30,7 @@ jobs:
       - checkout
       - run:
           name: Add known known hosts
-          command: echo $SERVER_URL >> ~/.ssh/known_hosts
+          command: echo "ssh-keyscan $SERVER >> ~/.ssh/known_hosts"
       - run: ssh $SERVER
       - run: cd ./atlasP-backend
       - run: sudo docker kill $(docker ps -a -q)
