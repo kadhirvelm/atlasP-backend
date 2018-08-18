@@ -13,4 +13,4 @@ RUN yarn build
 
 EXPOSE 3001
 
-CMD ["yarn", "run"]
+CMD ["yarn", "server"]
