@@ -12,7 +12,7 @@ class PureHome extends PureRouter {
   private mountRoutes() {
     this.router.get("/", (req, res) => {
       res.json({
-        message: `AtlasP Backend Running - V${process.env.npm_package_version}`
+        message: `AtlasP Backend Running - V${process.env.npm_package_version}`,
       });
     });
   }
