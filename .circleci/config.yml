@@ -28,6 +28,9 @@ jobs:
       - image: circleci/node:10.9.0
     steps:
       - checkout
+      - run:
+          name: Add known known hosts
+          command: echo $SERVER >> ~/.ssh/known_hosts
       - run: ssh $SERVER
       - run: cd ./atlasP-backend
       - run: sudo docker kill $(docker ps -a -q)
