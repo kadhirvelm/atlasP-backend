@@ -31,7 +31,7 @@ jobs:
       - run:
           name: Add known known hosts
           command: ssh-keyscan $SERVER_URL >> ~/.ssh/known_hosts
-      - run: ssh $SERVER 'cd ./atlasP-backend && sudo docker kill $(sudo docker ps -a -q) && sudo docker-compose build && sudo docker-compose up --detach && exit'
+      - run: ssh $SERVER 'cd ./atlasP-backend && sudo docker kill $(sudo docker ps -a -q) && yarn build && sudo docker-compose build && sudo docker-compose up --detach && exit'
 workflows:
   version: 2
   build:
