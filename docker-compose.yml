@@ -2,6 +2,7 @@ version: "2"
 services:
     atlasp:
         build: .
+        restart: always
         container_name: atlasp_server
         image: debian/latest
         environment:
@@ -9,12 +10,13 @@ services:
         volumes:
             - .:/var/www:rw
         ports:
-            - 3001:3001
+            - 81:81
         links:
             - mongodb
         depends_on:
             - mongodb
     mongodb:
+      restart: always
       container_name: atlasp_database
       image: mongo
       ports:
