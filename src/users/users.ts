@@ -29,7 +29,7 @@ export class User {
   }
 
   public async getUser(id: string) {
-    return this.getManyUsers([ id ]);
+    return this.getManyUsers([id]);
   }
 
   public async getManyUsers(ids: string[]) {
