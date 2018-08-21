@@ -1,0 +1,23 @@
+export function isString(item: any): item is string {
+  return typeof item === "string";
+}
+
+export function isNumber(item: any): item is number {
+  return typeof item === "number";
+}
+
+export function isBoolean(item: any): item is boolean {
+  return typeof item === "boolean";
+}
+
+export function isStringArray(item: any): item is string[] {
+  return typeof item === "object" && item.constructor === Array;
+}
+
+export function isSpecificString(item: any, options: string[]): item is string {
+  return isString(item) && options.includes(item.toLocaleLowerCase());
+}
+
+export function differenceBetweenArrays(array1: string[], array2: string[]) {
+  return array1.filter((item) => !array2.includes(item));
+}
