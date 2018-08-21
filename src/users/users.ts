@@ -29,12 +29,7 @@ export class User {
   }
 
   public async getUser(id: string) {
-    return handleError(async () => {
-      const user = await this.db
-        .collection(COLLECTION_NAME)
-        .find({ _id: new mongo.ObjectId(id) });
-      return user.toArray();
-    });
+    return this.getManyUsers([ id ]);
   }
 
   public async getManyUsers(ids: string[]) {
