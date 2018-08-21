@@ -3,7 +3,7 @@ import express from "express";
 import mongo from "mongodb";
 
 import { MONGO_URL } from "./config";
-import { HomeRoutes, UsersRoutes } from "./routes";
+import { HomeRoutes, USERS_ROOT, UsersRoutes } from "./routes";
 
 class PureApp {
     public app: express.Express;
@@ -12,20 +12,20 @@ class PureApp {
 
     constructor() {
       this.app = express();
-      this.app.use(bodyParser.urlencoded({ extended: true }));
+      this.app.use(bodyParser.json({ strict: true }));
 
       this.mountDatabase();
-      this.mountRoutes();
     }
 
     private async mountDatabase() {
       const client = await mongo.MongoClient.connect(MONGO_URL, { useNewUrlParser: true });
       this.database = client.db("atlasp");
+      this.mountRoutes();
     }
 
     private mountRoutes() {
       this.app.use("/", HomeRoutes);
-      this.app.use("/users", UsersRoutes);
+      this.app.use(USERS_ROOT, UsersRoutes(this.database));
     }
 }
 
