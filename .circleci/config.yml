@@ -24,15 +24,14 @@ jobs:
       - run: yarn install
       - run: yarn lint
   deploy:
-    machine:
-      node:
-        version: 8.2.0
+    docker:
+      - image: circleci/node:10.9.0
     steps:
       - checkout
       - run:
           name: Add known known hosts
           command: ssh-keyscan $SERVER_URL >> ~/.ssh/known_hosts
-      - run: ssh $SERVER 'cd ./atlasP-backend && git pull && docker kill $(docker ps -a -q) || true) && docker rm $(docker ps -a -q) || true) && yarn build && docker-compose build && docker-compose up --detach && exit'
+      - run: ssh $SERVER 'cd ./atlasP-backend && git pull && (docker kill $(docker ps -a -q) || true) && (docker rm $(docker ps -a -q) || true) && yarn build && docker-compose build && docker-compose up --detach && exit'
 workflows:
   version: 2
   build:
@@ -43,6 +42,6 @@ workflows:
           requires:
             - build
             - lint
-          # filters:
-          #   branches:
-          #     only: master
+          filters:
+            branches:
+              only: master
