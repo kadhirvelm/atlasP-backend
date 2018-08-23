@@ -26,6 +26,7 @@ class PureUsersRouter extends PureRouter {
     this.router.post("/new", this.handleCreateNewUser);
     this.router.post("/getOne", this.handleGetSingleUser);
     this.router.post("/getMany", this.handleGetManyUsers);
+    this.router.post("/claim", this.handleClaimUser);
   }
 
   private handleCreateNewUser = async (
@@ -70,6 +71,20 @@ class PureUsersRouter extends PureRouter {
     const payload = await this.user.getManyUsers(req.body.ids);
     res.json({
       message: "Successfully retrieved many user.",
+      payload,
+    });
+  }
+
+  private handleClaimUser = async (
+    req: express.Request,
+    res: express.Response,
+  ) => {
+    if (!isString(req.body.phoneNumber)) {
+      this.sendError(res, [`Invalid phone number: ${req.body.phoneNumber}`]);
+    }
+    const payload = await this.user.claim(req.body.phoneNumber);
+    res.json({
+      message: "Checked the database.",
       payload,
     });
   }
