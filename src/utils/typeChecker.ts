@@ -2,6 +2,13 @@ export function isString(item: any): item is string {
   return typeof item === "string";
 }
 
+export function isValidPhoneNumber(item: any) {
+  return (
+    isString(item)
+    && item.match(/^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$/)
+  );
+}
+
 export function isNumber(item: any): item is number {
   return typeof item === "number";
 }
@@ -19,5 +26,5 @@ export function isSpecificString(item: any, options: string[]): item is string {
 }
 
 export function differenceBetweenArrays(array1: string[], array2: string[]) {
-  return array1.filter((item) => !array2.includes(item));
+  return array1.filter(item => !array2.includes(item));
 }

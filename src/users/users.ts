@@ -1,6 +1,7 @@
 import mongo from "mongodb";
 
 import { handleError } from "../utils";
+import { sanitizePhoneNumber } from "../utils/general";
 
 export const validGenders = ["m", "f", "x"];
 export const validUserKeys = [
@@ -28,9 +29,10 @@ export interface IFullUser extends IUser {
 export class User {
   constructor(private db: mongo.Db) {}
 
-  public createNewUser(user: User) {
+  public createNewUser(user: IUser) {
     return handleError(async () => {
-      const newUser = await this.db.collection(USERS_COLLECTION).insertOne(user);
+      const finalUser = { ...user, phoneNumber: sanitizePhoneNumber(user.phoneNumber) };
+      const newUser = await this.db.collection(USERS_COLLECTION).insertOne(finalUser);
       return newUser;
     });
   }
@@ -50,13 +52,20 @@ export class User {
   }
 
   public async claim(phoneNumber: string) {
-    const fetchUser = await this.db.collection(USERS_COLLECTION).find({ phoneNumber });
+    const fetchUser = await this.db.collection(USERS_COLLECTION).find({
+      phoneNumber: sanitizePhoneNumber(phoneNumber),
+    });
     const user: IFullUser = await fetchUser.next();
     if (user == null || user.claimed) {
       return { error: "Phone number is not in the database or user has already been claimed." };
     }
-    const updatedUser = { ...user, claimed: true, temporaryPassword: Math.round(1000 + Math.random() * 9999) };
-    await this.db.collection(USERS_COLLECTION).update({ _id: user._id }, updatedUser);
+
+    const updatedUser = {
+      ...user,
+      claimed: true,
+      temporaryPassword: Math.round(1000 + Math.random() * 9999),
+    };
+    await this.db.collection(USERS_COLLECTION).updateOne({ _id: user._id }, updatedUser);
     return { temporaryPassword: updatedUser.temporaryPassword };
   }
 }
