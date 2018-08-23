@@ -1,7 +1,7 @@
 import mongo from "mongodb";
 
 import { handleError } from "../utils";
-import { sanitizePhoneNumber } from "../utils/general";
+import { hashPassword, sanitizePhoneNumber } from "../utils/general";
 
 export const validGenders = ["m", "f", "x"];
 export const validUserKeys = [
@@ -52,14 +52,10 @@ export class User {
   }
 
   public async claim(phoneNumber: string) {
-    const fetchUser = await this.db.collection(USERS_COLLECTION).find({
-      phoneNumber: sanitizePhoneNumber(phoneNumber),
-    });
-    const user: IFullUser = await fetchUser.next();
+    const user = await this.retrieveUser(phoneNumber);
     if (user == null || user.claimed) {
       return { error: "Phone number is not in the database or user has already been claimed." };
     }
-
     const updatedUser = {
       ...user,
       claimed: true,
@@ -67,5 +63,22 @@ export class User {
     };
     await this.db.collection(USERS_COLLECTION).updateOne({ _id: user._id }, updatedUser);
     return { temporaryPassword: updatedUser.temporaryPassword };
+  }
+
+  public async login(phoneNumber: string, password: string, temporaryPassword?: number) {
+    const user = await this.retrieveUser(phoneNumber);
+    if (user == null && temporaryPassword !== user.temporaryPassword && hashPassword(password) !== user.password) {
+      return { error: "Either user doesn't exist, or password is incorrect." };
+    }
+    delete user.password;
+    delete user.temporaryPassword;
+    return user;
+  }
+
+  private async retrieveUser(phoneNumber: string): Promise<IFullUser | null> {
+    const fetchUser = await this.db.collection(USERS_COLLECTION).find({
+      phoneNumber: sanitizePhoneNumber(phoneNumber),
+    });
+    return await fetchUser.next();
   }
 }

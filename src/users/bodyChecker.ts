@@ -43,3 +43,7 @@ export function isValidUser(body: any) {
   }
   return errorMessages;
 }
+
+export function isValidLogin(body: any) {
+  return isValidPhoneNumber(body.phoneNumber) && (isString(body.password) || isNumber(body.temporaryPassword));
+}

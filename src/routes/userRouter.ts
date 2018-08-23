@@ -2,9 +2,8 @@ import express from "express";
 import mongo from "mongodb";
 
 import { PureRouter } from "../config/consts";
-import { isValidUser, IUser, User } from "../users";
+import { isValidLogin, isValidUser, IUser, User } from "../users";
 import {
-  isNumber,
   isString,
   isStringArray,
   isValidPhoneNumber,
@@ -47,10 +46,10 @@ class PureUsersRouter extends PureRouter {
       this.sendError(res, errorMessages);
       return;
     }
-    const message = await this.user.createNewUser(req.body as IUser);
+    const payload = await this.user.createNewUser(req.body as IUser);
     res.json({
-      message,
-      payload: [],
+      message: "Attempted new user creation.",
+      payload,
     });
   }
 
@@ -64,7 +63,7 @@ class PureUsersRouter extends PureRouter {
     }
     const payload = await this.user.getUser(req.body.id);
     res.json({
-      message: "Successfully retrieved user.",
+      message: "Attempted single user retrieval.",
       payload,
     });
   }
@@ -79,7 +78,7 @@ class PureUsersRouter extends PureRouter {
     }
     const payload = await this.user.getManyUsers(req.body.ids);
     res.json({
-      message: "Successfully retrieved many user.",
+      message: "Attempted many user retrieval.",
       payload,
     });
   }
@@ -94,7 +93,7 @@ class PureUsersRouter extends PureRouter {
     }
     const payload = await this.user.claim(req.body.phoneNumber);
     res.json({
-      message: "Checked the database.",
+      message: "Attempted claim.",
       payload,
     });
   }
@@ -103,12 +102,15 @@ class PureUsersRouter extends PureRouter {
     req: express.Request,
     res: express.Response,
   ) => {
-    if (
-      !isValidPhoneNumber(req.body.phoneNumber)
-      || (!isString(req.body.password) && !isNumber(req.body.temporaryPassword))
-    ) {
-      this.sendError(res, ["Invalid credentials"]);
+    if (!isValidLogin(req.body)) {
+      this.sendError(res, ["Invalid credentials", req.body]);
+      return;
     }
+    const payload = await this.user.login(req.body.phoneNumber, req.body.password, req.body.temporaryPassword);
+    res.json({
+      message: "Attempted login.",
+      payload,
+    });
   }
 
   private sendError = (res: express.Response, message: string[]) => {
