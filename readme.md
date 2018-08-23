@@ -11,8 +11,8 @@
 | POST | /new | create a new user { User } | Yes |
 | POST | /getOne | fetches the user with { id: string }, returns `[]` if no user exists | Yes |
 | POST | /getMany | fetches the user with { ids: string[] }, returns `[]` if no user exists | Yes |
-| POST | /claim | claims a user account, giving it credentials | No |
-| POST | /login | checks if the has valid login credentials | No |
+| POST | /claim | claims a user account, giving it a phone number | Yes |
+| POST | /login | checks if the user has valid login credentials | Yes |
 | PUT | /update | updates existing user credentials with | No |
 | DELETE | /delete | deletes a user | No |
 
