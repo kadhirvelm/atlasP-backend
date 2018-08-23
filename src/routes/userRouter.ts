@@ -2,8 +2,10 @@ import express from "express";
 import mongo from "mongodb";
 
 import { PureRouter } from "../config/consts";
-import { isValidUser, User } from "../users";
-import { isString, isStringArray } from "../utils";
+import {
+  isValidLogin, isValidUser, IUser, User,
+} from "../users";
+import { isString, isStringArray, isValidPhoneNumber } from "../utils";
 
 export const USERS_ROOT = "/users";
 
@@ -23,9 +25,14 @@ class PureUsersRouter extends PureRouter {
         payload: [],
       });
     });
+
     this.router.post("/new", this.handleCreateNewUser);
+
     this.router.post("/getOne", this.handleGetSingleUser);
     this.router.post("/getMany", this.handleGetManyUsers);
+
+    this.router.post("/claim", this.handleClaimUser);
+    this.router.post("/login", this.handleLoginUser);
   }
 
   private handleCreateNewUser = async (
@@ -37,10 +44,10 @@ class PureUsersRouter extends PureRouter {
       this.sendError(res, errorMessages);
       return;
     }
-    const message = await this.user.createNewUser(req.body as User);
+    const payload = await this.user.createNewUser(req.body as IUser);
     res.json({
-      message,
-      payload: [],
+      message: "Attempted new user creation.",
+      payload,
     });
   }
 
@@ -54,7 +61,7 @@ class PureUsersRouter extends PureRouter {
     }
     const payload = await this.user.getUser(req.body.id);
     res.json({
-      message: "Successfully retrieved user.",
+      message: "Attempted single user retrieval.",
       payload,
     });
   }
@@ -69,7 +76,41 @@ class PureUsersRouter extends PureRouter {
     }
     const payload = await this.user.getManyUsers(req.body.ids);
     res.json({
-      message: "Successfully retrieved many user.",
+      message: "Attempted many user retrieval.",
+      payload,
+    });
+  }
+
+  private handleClaimUser = async (
+    req: express.Request,
+    res: express.Response,
+  ) => {
+    if (!isValidPhoneNumber(req.body.phoneNumber)) {
+      this.sendError(res, [`Invalid phone number: ${req.body.phoneNumber}`]);
+      return;
+    }
+    const payload = await this.user.claim(req.body.phoneNumber);
+    res.json({
+      message: "Attempted claim.",
+      payload,
+    });
+  }
+
+  private handleLoginUser = async (
+    req: express.Request,
+    res: express.Response,
+  ) => {
+    if (!isValidLogin(req.body)) {
+      this.sendError(res, ["Invalid credentials", req.body]);
+      return;
+    }
+    const payload = await this.user.login(
+      req.body.phoneNumber,
+      req.body.password,
+      req.body.temporaryPassword,
+    );
+    res.json({
+      message: "Attempted login.",
       payload,
     });
   }

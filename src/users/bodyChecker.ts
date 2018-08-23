@@ -3,6 +3,7 @@ import {
   isNumber,
   isSpecificString,
   isString,
+  isValidPhoneNumber,
 } from "../utils";
 import { validGenders, validUserKeys } from "./users";
 
@@ -37,8 +38,15 @@ export function isValidUser(body: any) {
   if (!isString(body.name)) {
     errorMessages.push(`Name is not a string: ${body.name}`);
   }
-  if (!isString(body.phoneNumber)) {
-    errorMessages.push(`Phone number is not a string: ${body.phoneNumber}`);
+  if (!isValidPhoneNumber(body.phoneNumber)) {
+    errorMessages.push(`Phone number is not valid: ${body.phoneNumber}`);
   }
   return errorMessages;
+}
+
+export function isValidLogin(body: any) {
+  return (
+    isValidPhoneNumber(body.phoneNumber)
+    && (isString(body.password) || isNumber(body.temporaryPassword))
+  );
 }
