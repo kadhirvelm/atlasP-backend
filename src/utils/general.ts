@@ -5,9 +5,15 @@ export function sanitizePhoneNumber(phoneNumber: string) {
 }
 
 export function hmacCheck(item: string) {
-  return crypto.createHmac("sha256", process.env.NODE_SECRET).update(item).digest("hex");
+  return crypto
+    .createHmac("sha256", process.env.NODE_SECRET)
+    .update(item)
+    .digest("hex");
 }
 
 export function hashPassword(password: string | undefined) {
-  return crypto.createHash("sha256").update(password || "").digest("hex");
+  return crypto
+    .createHash("sha256")
+    .update(password || "")
+    .digest("hex");
 }

@@ -45,5 +45,8 @@ export function isValidUser(body: any) {
 }
 
 export function isValidLogin(body: any) {
-  return isValidPhoneNumber(body.phoneNumber) && (isString(body.password) || isNumber(body.temporaryPassword));
+  return (
+    isValidPhoneNumber(body.phoneNumber)
+    && (isString(body.password) || isNumber(body.temporaryPassword))
+  );
 }

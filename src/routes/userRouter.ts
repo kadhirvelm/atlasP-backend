@@ -2,12 +2,10 @@ import express from "express";
 import mongo from "mongodb";
 
 import { PureRouter } from "../config/consts";
-import { isValidLogin, isValidUser, IUser, User } from "../users";
 import {
-  isString,
-  isStringArray,
-  isValidPhoneNumber,
-} from "../utils";
+  isValidLogin, isValidUser, IUser, User,
+} from "../users";
+import { isString, isStringArray, isValidPhoneNumber } from "../utils";
 
 export const USERS_ROOT = "/users";
 
@@ -106,7 +104,11 @@ class PureUsersRouter extends PureRouter {
       this.sendError(res, ["Invalid credentials", req.body]);
       return;
     }
-    const payload = await this.user.login(req.body.phoneNumber, req.body.password, req.body.temporaryPassword);
+    const payload = await this.user.login(
+      req.body.phoneNumber,
+      req.body.password,
+      req.body.temporaryPassword,
+    );
     res.json({
       message: "Attempted login.",
       payload,
