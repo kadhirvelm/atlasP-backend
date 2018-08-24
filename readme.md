@@ -58,7 +58,7 @@ means you shouldn't be importing that file.
 4. The app will be looking for mongo at 192.168.99.100:27017 (the default if running from kitematic)
 5. This is located in [src/config/index.ts](https://github.com/kadhirvelm/atlasP-backend/blob/master/src/config/index.ts)
 
-### Run prouduction
+### Run production
 
 1. Turn on docker-machine (or kitematic docker CLI)
 2. cd into root folder from exec (REPO/atlasP-backend/)
