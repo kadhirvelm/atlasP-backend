@@ -30,7 +30,7 @@ export class UserDatabase {
   }
 
   public async claim(phoneNumber: string) {
-    const user = await this.retrieveUser(phoneNumber);
+    const user = await this.retrieveUserWithPhoneNumber(phoneNumber);
     if (user == null || user.claimed) {
       return {
         error:
@@ -53,11 +53,11 @@ export class UserDatabase {
     password: string,
     temporaryPassword?: number,
   ) {
-    const user = await this.retrieveUser(phoneNumber);
+    const user = await this.retrieveUserWithPhoneNumber(phoneNumber);
     if (
       user == null
-      && temporaryPassword !== user.temporaryPassword
-      && hashPassword(password) !== user.password
+      || (temporaryPassword !== undefined && temporaryPassword !== user.temporaryPassword)
+      || hashPassword(password) !== user.password
     ) {
       return { error: "Either user doesn't exist, or password is incorrect." };
     }
@@ -82,14 +82,37 @@ export class UserDatabase {
     });
   }
 
+  public async updateUser(userID: mongo.ObjectId, newUserDetails: any) {
+    const user = await this.retrieveUserWithID(userID);
+    const newDetails = { ...newUserDetails };
+    if (newDetails.password !== undefined) {
+      newDetails.password = hashPassword(newDetails.password);
+      delete user.temporaryPassword;
+      delete newDetails.temporaryPassword;
+    }
+    const updatedUser = { ...user, ...newDetails };
+    return handleError(async () => {
+      const finalUpdatedUser = await this.db
+        .collection(USERS_COLLECTION)
+        .replaceOne({ _id: userID }, updatedUser);
+      return finalUpdatedUser;
+    });
+  }
+
   /**
    * Utils
    */
 
-  private async retrieveUser(phoneNumber: string): Promise<IFullUser | null> {
-    const fetchUser = await this.db.collection(USERS_COLLECTION).find({
-      phoneNumber: sanitizePhoneNumber(phoneNumber),
-    });
+  private retrieveUserWithPhoneNumber(phoneNumber: string): Promise<IFullUser | null> {
+    return this.fetchUser({ phoneNumber: sanitizePhoneNumber(phoneNumber) });
+  }
+
+  private retrieveUserWithID(id: mongo.ObjectId): Promise<IFullUser | null> {
+    return this.fetchUser({ _id: id });
+  }
+
+  private async fetchUser(query: any): Promise<IFullUser | null> {
+    const fetchUser = await this.db.collection(USERS_COLLECTION).find(query);
     return fetchUser.next();
   }
 }

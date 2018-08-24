@@ -6,6 +6,16 @@ import mongo from "mongodb";
 const ONE_DAY = 60 * 60 * 24;
 const TOKEN_EXPIRATION_TIME = ONE_DAY * 2;
 
+export interface IAuthenticatedRequest extends express.Request {
+  AUTHENTICATED_USER_ID?: mongo.ObjectId;
+}
+
+interface IJWTOutput {
+  id: string;
+  iat: number;
+  exp: number;
+}
+
 export function hmacCheck(item: string) {
   return crypto
     .createHmac("sha256", process.env.NODE_SECRET)
@@ -28,14 +38,15 @@ export function generateAuthenticationToken(userID: mongo.ObjectId) {
 
 export function decodeAuthenticationToken(token: string) {
   try {
-    return jwt.verify(token, process.env.NODE_SECRET);
+    const jtwOutput = jwt.verify(token, process.env.NODE_SECRET) as IJWTOutput;
+    return new mongo.ObjectId(jtwOutput.id);
   } catch (e) {
     return undefined;
   }
 }
 
 export function verifyToken(
-  req: express.Request,
+  req: IAuthenticatedRequest,
   res: express.Response,
   next: express.NextFunction,
 ) {
@@ -47,6 +58,6 @@ export function verifyToken(
         error: "Authentication token expired, incorrect, or not present.",
       });
   }
-  req.body.AUTHENTICATED_USER = userID;
+  req.AUTHENTICATED_USER_ID = userID;
   return next();
 }
