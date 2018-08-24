@@ -1,3 +1,5 @@
+import { validGenders, validUserKeys } from "./userConstants";
+
 import {
   differenceBetweenArrays,
   isNumber,
@@ -5,7 +7,6 @@ import {
   isString,
   isValidPhoneNumber,
 } from "../utils";
-import { validGenders, validUserKeys } from "./users";
 
 function hasCorrectKeys(body: any) {
   const errorMessages = [];

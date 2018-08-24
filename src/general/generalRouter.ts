@@ -1,9 +1,8 @@
-import { PureRouter } from "../config/consts";
+import { PureRouter } from "./generalConstants";
 
-/**
- * PATH ROOT: /home
- */
-class PureHome extends PureRouter {
+export const GENERAL_ROOT = "/";
+
+class PureGeneralRouter extends PureRouter {
   constructor() {
     super();
     this.mountRoutes();
@@ -18,4 +17,4 @@ class PureHome extends PureRouter {
   }
 }
 
-export const HomeRoutes = new PureHome().router;
+export const GeneralRoutes = new PureGeneralRouter().router;

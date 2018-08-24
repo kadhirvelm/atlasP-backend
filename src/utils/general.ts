@@ -1,19 +1,27 @@
-import crypto from "crypto";
+import express from "express";
+
+import { IFullUser } from "../users";
+
+import { generateAuthenticationToken } from "./security";
+
+export function sendError(res: express.Response, message: string[]) {
+  res.status(400).json({
+    message,
+    status: "Error, improperly formatted data",
+  });
+}
 
 export function sanitizePhoneNumber(phoneNumber: string) {
   return phoneNumber.slice().replace(/![0-9]/g, "");
 }
 
-export function hmacCheck(item: string) {
-  return crypto
-    .createHmac("sha256", process.env.NODE_SECRET)
-    .update(item)
-    .digest("hex");
-}
-
-export function hashPassword(password: string | undefined) {
-  return crypto
-    .createHash("sha256")
-    .update(password || "")
-    .digest("hex");
+export function sanitizeUser(user: IFullUser) {
+  const finalUser = { ...user };
+  delete finalUser.password;
+  delete finalUser.temporaryPassword;
+  const authenticationToken = generateAuthenticationToken(user._id);
+  return {
+    token: authenticationToken,
+    userDetails: finalUser,
+  };
 }

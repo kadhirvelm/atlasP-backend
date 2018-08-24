@@ -1,33 +1,20 @@
 import mongo from "mongodb";
 
-import { handleError } from "../utils";
-import { hashPassword, sanitizePhoneNumber } from "../utils/general";
+import { IFullUser, IUser, USERS_COLLECTION } from "./userConstants";
 
-export const validGenders = ["m", "f", "x"];
-export const validUserKeys = [
-  "age",
-  "gender",
-  "location",
-  "name",
-  "phoneNumber",
-];
-export const USERS_COLLECTION = "USERS";
-export interface IUser {
-  age: number;
-  gender: "M" | "F" | "X";
-  location: string;
-  name: string;
-  phoneNumber: string;
-}
-export interface IFullUser extends IUser {
-  _id: mongo.ObjectId;
-  claimed: boolean;
-  temporaryPassword: number;
-  password: string;
-}
+import {
+  handleError,
+  hashPassword,
+  sanitizePhoneNumber,
+  sanitizeUser,
+} from "../utils";
 
-export class User {
+export class UserDatabase {
   constructor(private db: mongo.Db) {}
+
+  /**
+   * Public routes
+   */
 
   public createNewUser(user: IUser) {
     return handleError(async () => {
@@ -39,20 +26,6 @@ export class User {
         .collection(USERS_COLLECTION)
         .insertOne(finalUser);
       return newUser;
-    });
-  }
-
-  public async getUser(id: string) {
-    return this.getManyUsers([id]);
-  }
-
-  public async getManyUsers(ids: string[]) {
-    return handleError(async () => {
-      const allUsers = await this.db
-        .collection(USERS_COLLECTION)
-        .find({ _id: { $in: ids.map((id) => new mongo.ObjectId(id)) } })
-        .sort({ name: 1 });
-      return allUsers.toArray();
     });
   }
 
@@ -88,10 +61,30 @@ export class User {
     ) {
       return { error: "Either user doesn't exist, or password is incorrect." };
     }
-    delete user.password;
-    delete user.temporaryPassword;
-    return user;
+    return sanitizeUser(user);
   }
+
+  /**
+   * Authenticated routes
+   */
+
+  public async getUser(id: string) {
+    return this.getManyUsers([id]);
+  }
+
+  public async getManyUsers(ids: string[]) {
+    return handleError(async () => {
+      const allUsers = await this.db
+        .collection(USERS_COLLECTION)
+        .find({ _id: { $in: ids.map((id) => new mongo.ObjectId(id)) } })
+        .sort({ name: 1 });
+      return allUsers.toArray();
+    });
+  }
+
+  /**
+   * Utils
+   */
 
   private async retrieveUser(phoneNumber: string): Promise<IFullUser | null> {
     const fetchUser = await this.db.collection(USERS_COLLECTION).find({

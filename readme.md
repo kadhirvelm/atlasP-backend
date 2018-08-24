@@ -16,7 +16,6 @@
 | PUT | /update | updates existing user credentials with | No |
 | DELETE | /delete | deletes a user | No |
 
-
 ## Developing
 
 ### Run locally run
@@ -40,3 +39,22 @@
 1. Turn on docker-machine (or kitematic docker CLI)
 2. cd into root folder from exec (REPO/atlasP-backend/)
 3. docker-compose build && docker-compose up
+
+## Contribution
+
+### Importing
+
+```typescript
+import external from "modules";
+
+import local from "internal_files";
+
+import everything_else from "internal_files";
+```
+
+The goal here is to standardize importing.
+
+In additiona, use `index.ts` files in each sub-folder, exporting all contents that can be accessed by
+other files. This is to avoid super specific sub-module importing and to prevent future routes from importing
+module specific files. In other words, if `import file from "../module_folder"` doesn't work, it probably
+means you shouldn't be importing that file.

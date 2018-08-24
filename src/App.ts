@@ -3,7 +3,8 @@ import express from "express";
 import mongo from "mongodb";
 
 import { MONGO_URL } from "./config";
-import { HomeRoutes, USERS_ROOT, UsersRoutes } from "./routes";
+import { GENERAL_ROOT, GeneralRoutes } from "./general/generalRouter";
+import { USERS_ROOT, UsersRoutes } from "./users/userRouter";
 
 class PureApp {
     public app: express.Express;
@@ -24,7 +25,7 @@ class PureApp {
     }
 
     private mountRoutes() {
-      this.app.use("/", HomeRoutes);
+      this.app.use(GENERAL_ROOT, GeneralRoutes);
       this.app.use(USERS_ROOT, UsersRoutes(this.database));
     }
 }
