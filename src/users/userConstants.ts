@@ -19,6 +19,8 @@ export const validUserKeys = [
   "gender",
   "location",
   "name",
+  "password",
   "phoneNumber",
+  "temporaryPassword",
 ];
 export const USERS_COLLECTION = "USERS";

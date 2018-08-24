@@ -6,15 +6,39 @@
 
 ### /users
 
-| REST | Route | Action | Implemented
+| REST | Route | Action | Implemented |
 | ---- | ---- | -------- | ---- |
 | POST | /new | create a new user { User } | Yes |
 | POST | /getOne | fetches the user with { id: string }, returns `[]` if no user exists | Yes |
 | POST | /getMany | fetches the user with { ids: string[] }, returns `[]` if no user exists | Yes |
 | POST | /claim | claims a user account, giving it a phone number | Yes |
 | POST | /login | checks if the user has valid login credentials | Yes |
-| PUT | /update | updates existing user credentials with | No |
-| DELETE | /delete | deletes a user | No |
+| PUT | /update | updates existing user credentials with | Yes |
+
+## Contribution
+
+### RDD
+
+We implement readme driven development, meaning before you make feature changes to the API, make sure to record what exactly
+you're trying to implement here in the README, specifically in the routes section. If you're refactoring, making infrastructure
+changes, etc, no need to include anything here in the README, just make a descriptive PR message.
+
+### Importing
+
+```typescript
+import external from "modules";
+
+import local from "internal_files";
+
+import everything_else from "internal_files";
+```
+
+The goal here is to standardize importing.
+
+In additiona, use `index.ts` files in each sub-folder, exporting all contents that can be accessed by
+other files. This is to avoid super specific sub-module importing and to prevent future routes from importing
+module specific files. In other words, if `import file from "../module_folder"` doesn't work, it probably
+means you shouldn't be importing that file.
 
 ## Developing
 
@@ -39,22 +63,3 @@
 1. Turn on docker-machine (or kitematic docker CLI)
 2. cd into root folder from exec (REPO/atlasP-backend/)
 3. docker-compose build && docker-compose up
-
-## Contribution
-
-### Importing
-
-```typescript
-import external from "modules";
-
-import local from "internal_files";
-
-import everything_else from "internal_files";
-```
-
-The goal here is to standardize importing.
-
-In additiona, use `index.ts` files in each sub-folder, exporting all contents that can be accessed by
-other files. This is to avoid super specific sub-module importing and to prevent future routes from importing
-module specific files. In other words, if `import file from "../module_folder"` doesn't work, it probably
-means you shouldn't be importing that file.

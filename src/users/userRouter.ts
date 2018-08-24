@@ -1,12 +1,13 @@
 import express from "express";
 import mongo from "mongodb";
 
-import { isValidLogin, isValidUser } from "./userBodyChecker";
+import { isValidLogin, isValidUser, isValidUserUpdate } from "./userBodyChecker";
 import { IUser } from "./userConstants";
 import { UserDatabase } from "./usersDatabase";
 
 import { PureRouter } from "../general";
 import {
+  IAuthenticatedRequest,
   isValidMongoID,
   isValidMongoIDArray,
   isValidPhoneNumber,
@@ -90,6 +91,7 @@ class PureUsersRouter extends PureRouter {
   private mountAuthenticatedRoutes() {
     this.router.post("/getOne", verifyToken, this.handleGetSingleUser);
     this.router.post("/getMany", verifyToken, this.handleGetManyUsers);
+    this.router.post("/update", verifyToken, this.handleUpdateUser);
   }
 
   private handleGetSingleUser = async (
@@ -118,6 +120,21 @@ class PureUsersRouter extends PureRouter {
     const payload = await this.user.getManyUsers(req.body.ids);
     return res.json({
       message: "Attempted many user retrieval.",
+      payload,
+    });
+  }
+
+  private handleUpdateUser = async (
+    req: IAuthenticatedRequest,
+    res: express.Response,
+  ) => {
+    const errorMessages = isValidUserUpdate(req.body);
+    if (errorMessages.length > 0) {
+      return sendError(res, errorMessages);
+    }
+    const payload = await this.user.updateUser(req.AUTHENTICATED_USER_ID, req.body);
+    return res.json({
+      message: "Attempted to update user.",
       payload,
     });
   }

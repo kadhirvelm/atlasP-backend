@@ -6,16 +6,18 @@ import {
   isSpecificString,
   isString,
   isValidPhoneNumber,
+  isValidStringArray,
 } from "../utils";
 
-function hasCorrectKeys(body: any) {
-  const errorMessages = [];
+function hasValidUserKeys(body: any) {
   const extraKeys = differenceBetweenArrays(Object.keys(body), validUserKeys);
-  if (extraKeys.length > 0) {
-    errorMessages.push(`Contains extra fields: ${extraKeys}`);
-  }
+  return extraKeys.length > 0 ? [`Contains extra fields: ${extraKeys}`] : [];
+}
+
+function hasCorrectKeys(body: any) {
+  const errorMessages = this.hasValidUserKeys(body);
   const missingKeys = differenceBetweenArrays(validUserKeys, Object.keys(body));
-  if (extraKeys.length > 0) {
+  if (missingKeys.length > 0) {
     errorMessages.push(`Missing fields: ${missingKeys}`);
   }
   return errorMessages;
@@ -41,6 +43,14 @@ export function isValidUser(body: any) {
   }
   if (!isValidPhoneNumber(body.phoneNumber)) {
     errorMessages.push(`Phone number is not valid: ${body.phoneNumber}`);
+  }
+  return errorMessages;
+}
+
+export function isValidUserUpdate(body: any) {
+  const errorMessages = hasValidUserKeys(body);
+  if (!isValidStringArray(Object.values(body))) {
+    errorMessages.push("Cannot include empty or null fields.");
   }
   return errorMessages;
 }
