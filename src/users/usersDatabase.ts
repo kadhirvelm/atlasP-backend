@@ -84,12 +84,13 @@ export class UserDatabase {
 
   public async updateUser(userID: mongo.ObjectId, newUserDetails: any) {
     const user = await this.retrieveUserWithID(userID);
-    if (newUserDetails.password !== undefined) {
-      newUserDetails.password = hashPassword(newUserDetails.password);
+    const newDetails = { ...newUserDetails };
+    if (newDetails.password !== undefined) {
+      newDetails.password = hashPassword(newDetails.password);
       delete user.temporaryPassword;
-      delete newUserDetails.temporaryPassword;
+      delete newDetails.temporaryPassword;
     }
-    const updatedUser = { ...user, ...newUserDetails };
+    const updatedUser = { ...user, ...newDetails };
     return handleError(async () => {
       const finalUpdatedUser = await this.db
         .collection(USERS_COLLECTION)
