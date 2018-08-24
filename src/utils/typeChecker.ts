@@ -1,3 +1,5 @@
+import mongodb from "mongodb";
+
 export function isString(item: any): item is string {
   return typeof item === "string";
 }
@@ -27,4 +29,12 @@ export function isSpecificString(item: any, options: string[]): item is string {
 
 export function differenceBetweenArrays(array1: string[], array2: string[]) {
   return array1.filter((item) => !array2.includes(item));
+}
+
+export function isValidMongoID(id: string) {
+  return mongodb.ObjectID.isValid(id);
+}
+
+export function isValidMongoIDArray(ids: string[]) {
+  return ids.map(isValidMongoID).includes(false);
 }
