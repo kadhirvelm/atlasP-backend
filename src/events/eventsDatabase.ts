@@ -39,11 +39,11 @@ export class EventDatabase {
     });
   }
 
-  private cleanRawIntoFinal = (event: IRawEvent): IEvent =>
-    ({ ...event,
-        attendees:
+  private cleanRawIntoFinal = (event: IRawEvent): IEvent => ({
+    ...event,
+    attendees:
         parseIntoObjectIDs(event.attendees),
-        date: new Date(event.date),
-        host: new mongo.ObjectId(event.host),
-    })
+    date: new Date(event.date),
+    host: new mongo.ObjectId(event.host),
+  })
 }
