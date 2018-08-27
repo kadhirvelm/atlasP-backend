@@ -15,6 +15,15 @@
 | POST | /login | checks if the user has valid login credentials | Yes |
 | PUT | /update | updates existing user credentials with | Yes |
 
+### /events
+
+| REST | Route | Action | Implemented |
+| ---- | ---- | -------- | ---- |
+| POST | /new | create a new event { Event } | Yes |
+| POST | /update | updates an existing event given { eventId: string, ...body } | Yes |
+| POST | /getOne | fetches a single event { eventId: string } | Yes |
+| POST | /getMany | gets many events { eventIds: string[] } | Yes |
+
 ## Contribution
 
 ### RDD
