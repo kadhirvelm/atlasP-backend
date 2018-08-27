@@ -1,7 +1,11 @@
 import express from "express";
 import mongo from "mongodb";
 
-import { isValidLogin, isValidUser, isValidUserUpdate } from "./userBodyChecker";
+import {
+  isValidLogin,
+  isValidUser,
+  isValidUserUpdate,
+} from "./userBodyChecker";
 import { IUser } from "./userConstants";
 import { UserDatabase } from "./usersDatabase";
 
@@ -132,7 +136,10 @@ class PureUsersRouter extends PureRouter {
     if (errorMessages.length > 0) {
       return sendError(res, errorMessages);
     }
-    const payload = await this.user.updateUser(req.AUTHENTICATED_USER_ID, req.body);
+    const payload = await this.user.updateUser(
+      req.AUTHENTICATED_USER_ID,
+      req.body,
+    );
     return res.json({
       message: "Attempted to update user.",
       payload,

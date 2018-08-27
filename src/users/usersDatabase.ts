@@ -5,6 +5,7 @@ import { IFullUser, IUser, USERS_COLLECTION } from "./userConstants";
 import {
   handleError,
   hashPassword,
+  parseIntoObjectIDs,
   sanitizePhoneNumber,
   sanitizeUser,
 } from "../utils";
@@ -56,7 +57,8 @@ export class UserDatabase {
     const user = await this.retrieveUserWithPhoneNumber(phoneNumber);
     if (
       user == null
-      || (temporaryPassword !== undefined && temporaryPassword !== user.temporaryPassword)
+      || (temporaryPassword !== undefined
+        && temporaryPassword !== user.temporaryPassword)
       || hashPassword(password) !== user.password
     ) {
       return { error: "Either user doesn't exist, or password is incorrect." };
@@ -76,7 +78,7 @@ export class UserDatabase {
     return handleError(async () => {
       const allUsers = await this.db
         .collection(USERS_COLLECTION)
-        .find({ _id: { $in: ids.map((id) => new mongo.ObjectId(id)) } })
+        .find({ _id: { $in: parseIntoObjectIDs(ids) } })
         .sort({ name: 1 });
       return allUsers.toArray();
     });
@@ -103,7 +105,9 @@ export class UserDatabase {
    * Utils
    */
 
-  private retrieveUserWithPhoneNumber(phoneNumber: string): Promise<IFullUser | null> {
+  private retrieveUserWithPhoneNumber(
+    phoneNumber: string,
+  ): Promise<IFullUser | null> {
     return this.fetchUser({ phoneNumber: sanitizePhoneNumber(phoneNumber) });
   }
 
