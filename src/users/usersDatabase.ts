@@ -5,6 +5,7 @@ import { IFullUser, IUser, USERS_COLLECTION } from "./userConstants";
 import {
   handleError,
   hashPassword,
+  isStringNotMongoID,
   parseIntoObjectIDs,
   sanitizePhoneNumber,
   sanitizeUser,
@@ -74,11 +75,12 @@ export class UserDatabase {
     return this.getManyUsers([id]);
   }
 
-  public async getManyUsers(ids: string[]) {
+  public async getManyUsers(ids: string[] | mongo.ObjectId[]) {
     return handleError(async () => {
+      const finalIds = isStringNotMongoID(ids) ? parseIntoObjectIDs(ids) : ids;
       const allUsers = await this.db
         .collection(USERS_COLLECTION)
-        .find({ _id: { $in: parseIntoObjectIDs(ids) } })
+        .find({ _id: { $in: finalIds } })
         .sort({ name: 1 });
       return allUsers.toArray();
     });
@@ -101,6 +103,19 @@ export class UserDatabase {
     });
   }
 
+  public async indexUserEvents(
+    userIds: mongo.ObjectId[],
+    eventId: mongo.ObjectId,
+  ) {
+    const allUsers = await this.getManyUsers(userIds);
+    allUsers.map((singleUser: IFullUser) => this.appendConnection(singleUser, userIds, eventId));
+    allUsers.forEach(async (singleUser: IFullUser) => {
+      this.db
+        .collection(USERS_COLLECTION)
+        .updateOne({ _id: singleUser._id }, { $set: { ...singleUser } });
+    });
+  }
+
   /**
    * Utils
    */
@@ -118,5 +133,23 @@ export class UserDatabase {
   private async fetchUser(query: any): Promise<IFullUser | null> {
     const fetchUser = await this.db.collection(USERS_COLLECTION).find(query);
     return fetchUser.next();
+  }
+
+  private appendConnection = (
+    singleUser: IFullUser,
+    appendIds: mongo.ObjectId[],
+    eventId: mongo.ObjectId,
+  ) => {
+    const copyUser = { ...singleUser };
+    if (copyUser.connections === undefined) {
+      copyUser.connections = {};
+    }
+    appendIds.forEach((id) => {
+      copyUser.connections[id.toHexString()] = [
+        ...copyUser.connections[id.toHexString()],
+        eventId,
+      ];
+    });
+    return copyUser;
   }
 }
