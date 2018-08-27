@@ -14,9 +14,9 @@ function hasValidUserKeys(body: any) {
   return extraKeys.length > 0 ? [`Contains extra fields: ${extraKeys}`] : [];
 }
 
-function hasCorrectKeys(body: any) {
-  const errorMessages = this.hasValidUserKeys(body);
-  const missingKeys = differenceBetweenArrays(validUserKeys, Object.keys(body));
+function hasCorrectKeys(body: any, checkForKeys: string[]) {
+  const errorMessages = hasValidUserKeys(body);
+  const missingKeys = differenceBetweenArrays(checkForKeys, Object.keys(body));
   if (missingKeys.length > 0) {
     errorMessages.push(`Missing fields: ${missingKeys}`);
   }
@@ -24,7 +24,12 @@ function hasCorrectKeys(body: any) {
 }
 
 export function isValidUser(body: any) {
-  const errorMessages = hasCorrectKeys(body);
+  const errorMessages = hasCorrectKeys(
+    body,
+    validUserKeys.filter(
+      (key) => key !== "password" && key !== "temporaryPassword",
+    ),
+  );
   if (errorMessages.length > 0) {
     return errorMessages;
   }

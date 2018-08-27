@@ -1,10 +1,12 @@
 import express from "express";
 import mongo from "mongodb";
 
+import { IRawEvent } from "./eventsConstants";
 import { EventDatabase } from "./eventsDatabase";
 
 import { PureRouter } from "../general";
-import { IAuthenticatedRequest, verifyToken } from "../utils";
+import { IAuthenticatedRequest, sendError, verifyToken } from "../utils";
+import { isValidEvent } from "./eventBodyChecker";
 
 export const EVENTS_ROOT = "/events";
 
@@ -21,14 +23,19 @@ class PureEventsRouter extends PureRouter {
     this.router.post("/new", verifyToken, this.handleCreateEvent);
   }
 
-  private handleCreateEvent = (
+  private handleCreateEvent = async (
     req: IAuthenticatedRequest,
     res: express.Response,
   ) => {
-      return res.json({
-          message: "Attempted to create new event",
-          payload: { error: "Not implemented yet." },
-      });
+    const errorMessages = isValidEvent(req.body);
+    if (errorMessages.length > 0) {
+      return sendError(res, errorMessages);
+    }
+    const payload = await this.events.createNewEvent(req.body as IRawEvent);
+    return res.json({
+        message: "Attempted to create new event",
+        payload,
+    });
   }
 }
 
