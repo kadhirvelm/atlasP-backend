@@ -50,13 +50,13 @@ export function verifyToken(
   res: express.Response,
   next: express.NextFunction,
 ) {
-  const userID = decodeAuthenticationToken(req.headers["access-token"] as string);
+  const userID = decodeAuthenticationToken(req.headers[
+    "access-token"
+  ] as string);
   if (userID === undefined) {
-    return res
-      .status(401)
-      .json({
-        error: "Authentication token expired, incorrect, or not present.",
-      });
+    return res.status(401).json({
+      error: "Authentication token expired, incorrect, or not present.",
+    });
   }
   req.AUTHENTICATED_USER_ID = userID;
   return next();

@@ -1,4 +1,5 @@
 import express from "express";
+import mongo from "mongodb";
 
 import { IFullUser } from "../users";
 
@@ -24,4 +25,8 @@ export function sanitizeUser(user: IFullUser) {
     token: authenticationToken,
     userDetails: finalUser,
   };
+}
+
+export function parseIntoObjectIDs(ids: string[]): mongo.ObjectId[] {
+  return ids.map((id) => new mongo.ObjectId(id));
 }

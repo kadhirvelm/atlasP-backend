@@ -36,9 +36,13 @@ export function isValidMongoID(id: string) {
 }
 
 export function isValidMongoIDArray(ids: string[]) {
-  return ids.map(isValidMongoID).includes(false);
+  return ids !== undefined && !ids.map(isValidMongoID).includes(false);
 }
 
 export function isValidStringArray(items: string[]) {
   return !items.some((item) => item == null || item === "");
+}
+
+export function isValidDate(date: any) {
+  return !isNaN(Date.parse(date));
 }
