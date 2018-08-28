@@ -2,11 +2,11 @@ import mongo from "mongodb";
 
 import { IFullUser, IUser, USERS_COLLECTION } from "./userConstants";
 
-import { EventDatabase, IEvent } from "../events";
+import { IEvent } from "../events";
 import {
   handleError,
   hashPassword,
-  isStringNotMongoID,
+  isValidStringID,
   parseIntoObjectIDs,
   sanitizePhoneNumber,
   sanitizeUser,
@@ -80,7 +80,7 @@ export class UserDatabase {
     ids: string[] | mongo.ObjectId[],
   ): Promise<IFullUser[]> {
     return handleError(async () => {
-      const finalIds = isStringNotMongoID(ids) ? parseIntoObjectIDs(ids) : ids;
+      const finalIds = isValidStringID(ids) ? parseIntoObjectIDs(ids) : ids;
       const allUsers = await this.db
         .collection(USERS_COLLECTION)
         .find({ _id: { $in: finalIds } });

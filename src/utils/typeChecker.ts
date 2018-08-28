@@ -47,7 +47,7 @@ export function isValidDate(date: any) {
   return !isNaN(Date.parse(date));
 }
 
-export function isStringNotMongoID(
+export function isValidStringID(
   item: string[] | mongo.ObjectId[],
 ): item is string[] {
   return typeof item[0] === "string";

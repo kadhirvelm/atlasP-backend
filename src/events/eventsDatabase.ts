@@ -12,11 +12,6 @@ export class EventDatabase {
     this.userDatabase = new UserDatabase(db);
   }
 
-  public setDatabase(db: mongo.Db) {
-    this.db = db;
-    return this;
-  }
-
   public async createNewEvent(event: IRawEvent) {
     return handleError(async () => {
       const finalEvent = this.cleanRawIntoFinal(event);
