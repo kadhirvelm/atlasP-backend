@@ -12,6 +12,11 @@ export class EventDatabase {
     this.userDatabase = new UserDatabase(db);
   }
 
+  public setDatabase(db: mongo.Db) {
+    this.db = db;
+    return this;
+  }
+
   public async createNewEvent(event: IRawEvent) {
     return handleError(async () => {
       const finalEvent = this.cleanRawIntoFinal(event);
@@ -28,18 +33,28 @@ export class EventDatabase {
 
   public async updateEvent(eventId: mongo.ObjectId, event: IRawEvent) {
     return handleError(async () => {
+      const originalEvent = await this.getOneEvent(eventId.toHexString());
+      await this.userDatabase.removeIndexUserEvents(eventId, originalEvent);
+
+      const finalEvent = this.cleanRawIntoFinal(event);
       const newEvent = await this.db
         .collection(EVENTS_COLLECTION)
-        .replaceOne({ _id: eventId }, this.cleanRawIntoFinal(event));
-      return newEvent;
+        .replaceOne({ _id: eventId }, finalEvent);
+
+      this.userDatabase.indexUserEvents(
+        [finalEvent.host, ...finalEvent.attendees],
+        eventId,
+      );
+      return newEvent.result;
     });
   }
 
   public async getOneEvent(eventId: string) {
-    return this.getManyEvents([eventId]);
+    const events = await this.getManyEvents([eventId]);
+    return events[0];
   }
 
-  public async getManyEvents(eventIds: string[]) {
+  public async getManyEvents(eventIds: string[]): Promise<IEvent[]> {
     return handleError(async () => {
       const allEvents = await this.db
         .collection(EVENTS_COLLECTION)
