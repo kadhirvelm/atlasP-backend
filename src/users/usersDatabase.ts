@@ -60,7 +60,7 @@ export class UserDatabase {
     if (
       user == null
       || (temporaryPassword !== undefined
-      && temporaryPassword !== user.temporaryPassword)
+        && temporaryPassword !== user.temporaryPassword)
       || hashPassword(password) !== user.password
     ) {
       return { error: "Either user doesn't exist, or password is incorrect." };
@@ -76,7 +76,9 @@ export class UserDatabase {
     return this.getManyUsers([id]);
   }
 
-  public async getManyUsers(ids: string[] | mongo.ObjectId[]): Promise<IFullUser[]> {
+  public async getManyUsers(
+    ids: string[] | mongo.ObjectId[],
+  ): Promise<IFullUser[]> {
     return handleError(async () => {
       const finalIds = isStringNotMongoID(ids) ? parseIntoObjectIDs(ids) : ids;
       const allUsers = await this.db
@@ -114,7 +116,11 @@ export class UserDatabase {
     eventId: mongo.ObjectId,
     originalEvent: IEvent,
   ) {
-    return this.changeUserIndex([originalEvent.host, ...originalEvent.attendees], eventId, this.removeConnection);
+    return this.changeUserIndex(
+      [originalEvent.host, ...originalEvent.attendees],
+      eventId,
+      this.removeConnection,
+    );
   }
 
   /**
@@ -139,17 +145,21 @@ export class UserDatabase {
   private async changeUserIndex(
     userIds: mongo.ObjectId[],
     eventId: mongo.ObjectId,
-    mapping: (singleUser: IFullUser,
-              appendIds: mongo.ObjectId[],
-              eventId: mongo.ObjectId) => IFullUser,
+    mapping: (
+      singleUser: IFullUser,
+      appendIds: mongo.ObjectId[],
+      eventId: mongo.ObjectId,
+    ) => IFullUser,
   ) {
     const allUsers = await this.getManyUsers(userIds);
-    const usersWithConnections = allUsers.map((singleUser: IFullUser) => mapping(singleUser, userIds, eventId));
-    const allUpdates = await Promise.all(usersWithConnections.map((singleUser: IFullUser) => {
-       return this.db
+    const usersWithConnections = allUsers.map(
+      (singleUser: IFullUser) => mapping(singleUser, userIds, eventId),
+    );
+    const allUpdates = await Promise.all(
+      usersWithConnections.map((singleUser: IFullUser) => this.db
         .collection(USERS_COLLECTION)
-        .updateOne({ _id: singleUser._id }, { $set: { ...singleUser } });
-    }));
+        .updateOne({ _id: singleUser._id }, { $set: { ...singleUser } })),
+    );
     return allUpdates;
   }
 
