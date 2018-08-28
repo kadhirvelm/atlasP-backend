@@ -12,6 +12,7 @@ export interface IFullUser extends IUser {
   claimed: boolean;
   temporaryPassword: number;
   password: string;
+  connections?: { [id: string]: mongo.ObjectId[] };
 }
 export const validGenders = ["m", "f", "x"];
 export const validUserKeys = [

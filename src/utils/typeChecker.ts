@@ -1,4 +1,4 @@
-import mongodb from "mongodb";
+import mongo from "mongodb";
 
 export function isString(item: any): item is string {
   return typeof item === "string";
@@ -32,7 +32,7 @@ export function differenceBetweenArrays(array1: string[], array2: string[]) {
 }
 
 export function isValidMongoID(id: string) {
-  return mongodb.ObjectID.isValid(id);
+  return mongo.ObjectID.isValid(id);
 }
 
 export function isValidMongoIDArray(ids: string[]) {
@@ -45,4 +45,10 @@ export function isValidStringArray(items: string[]) {
 
 export function isValidDate(date: any) {
   return !isNaN(Date.parse(date));
+}
+
+export function isValidStringID(
+  item: string[] | mongo.ObjectId[],
+): item is string[] {
+  return typeof item[0] === "string";
 }

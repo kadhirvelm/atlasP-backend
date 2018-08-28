@@ -2,34 +2,54 @@ import mongo from "mongodb";
 
 import { EVENTS_COLLECTION, IEvent, IRawEvent } from "./eventsConstants";
 
+import { UserDatabase } from "../users";
 import { handleError, parseIntoObjectIDs } from "../utils";
 
 export class EventDatabase {
-  constructor(private db: mongo.Db) {}
+  private userDatabase: UserDatabase;
+
+  constructor(private db: mongo.Db) {
+    this.userDatabase = new UserDatabase(db);
+  }
 
   public async createNewEvent(event: IRawEvent) {
     return handleError(async () => {
+      const finalEvent = this.cleanRawIntoFinal(event);
       const newEvent = await this.db
         .collection(EVENTS_COLLECTION)
-        .insertOne(this.cleanRawIntoFinal(event));
+        .insertOne(finalEvent);
+      this.userDatabase.indexUserEvents(
+        [finalEvent.host, ...finalEvent.attendees],
+        newEvent.insertedId,
+      );
       return newEvent;
     });
   }
 
   public async updateEvent(eventId: mongo.ObjectId, event: IRawEvent) {
     return handleError(async () => {
+      const originalEvent = await this.getOneEvent(eventId.toHexString());
+      await this.userDatabase.removeIndexUserEvents(eventId, originalEvent);
+
+      const finalEvent = this.cleanRawIntoFinal(event);
       const newEvent = await this.db
         .collection(EVENTS_COLLECTION)
-        .replaceOne({ _id: eventId }, this.cleanRawIntoFinal(event));
-      return newEvent;
+        .replaceOne({ _id: eventId }, finalEvent);
+
+      this.userDatabase.indexUserEvents(
+        [finalEvent.host, ...finalEvent.attendees],
+        eventId,
+      );
+      return newEvent.result;
     });
   }
 
   public async getOneEvent(eventId: string) {
-    return this.getManyEvents([eventId]);
+    const events = await this.getManyEvents([eventId]);
+    return events[0];
   }
 
-  public async getManyEvents(eventIds: string[]) {
+  public async getManyEvents(eventIds: string[]): Promise<IEvent[]> {
     return handleError(async () => {
       const allEvents = await this.db
         .collection(EVENTS_COLLECTION)
@@ -41,8 +61,7 @@ export class EventDatabase {
 
   private cleanRawIntoFinal = (event: IRawEvent): IEvent => ({
     ...event,
-    attendees:
-        parseIntoObjectIDs(event.attendees),
+    attendees: parseIntoObjectIDs(event.attendees),
     date: new Date(event.date),
     host: new mongo.ObjectId(event.host),
   })

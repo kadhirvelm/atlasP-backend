@@ -2,9 +2,11 @@ import mongo from "mongodb";
 
 import { IFullUser, IUser, USERS_COLLECTION } from "./userConstants";
 
+import { IEvent } from "../events";
 import {
   handleError,
   hashPassword,
+  isValidStringID,
   parseIntoObjectIDs,
   sanitizePhoneNumber,
   sanitizeUser,
@@ -74,12 +76,14 @@ export class UserDatabase {
     return this.getManyUsers([id]);
   }
 
-  public async getManyUsers(ids: string[]) {
+  public async getManyUsers(
+    ids: string[] | mongo.ObjectId[],
+  ): Promise<IFullUser[]> {
     return handleError(async () => {
+      const finalIds = isValidStringID(ids) ? parseIntoObjectIDs(ids) : ids;
       const allUsers = await this.db
         .collection(USERS_COLLECTION)
-        .find({ _id: { $in: parseIntoObjectIDs(ids) } })
-        .sort({ name: 1 });
+        .find({ _id: { $in: finalIds } });
       return allUsers.toArray();
     });
   }
@@ -101,6 +105,24 @@ export class UserDatabase {
     });
   }
 
+  public async indexUserEvents(
+    userIds: mongo.ObjectId[],
+    eventId: mongo.ObjectId,
+  ) {
+    return this.changeUserIndex(userIds, eventId, this.appendConnection);
+  }
+
+  public async removeIndexUserEvents(
+    eventId: mongo.ObjectId,
+    originalEvent: IEvent,
+  ) {
+    return this.changeUserIndex(
+      [originalEvent.host, ...originalEvent.attendees],
+      eventId,
+      this.removeConnection,
+    );
+  }
+
   /**
    * Utils
    */
@@ -118,5 +140,60 @@ export class UserDatabase {
   private async fetchUser(query: any): Promise<IFullUser | null> {
     const fetchUser = await this.db.collection(USERS_COLLECTION).find(query);
     return fetchUser.next();
+  }
+
+  private async changeUserIndex(
+    userIds: mongo.ObjectId[],
+    eventId: mongo.ObjectId,
+    mapping: (
+      singleUser: IFullUser,
+      appendIds: mongo.ObjectId[],
+      eventId: mongo.ObjectId,
+    ) => IFullUser,
+  ) {
+    const allUsers = await this.getManyUsers(userIds);
+    const usersWithConnections = allUsers.map(
+      (singleUser: IFullUser) => mapping(singleUser, userIds, eventId),
+    );
+    const allUpdates = await Promise.all(
+      usersWithConnections.map((singleUser: IFullUser) => this.db
+        .collection(USERS_COLLECTION)
+        .updateOne({ _id: singleUser._id }, { $set: { ...singleUser } })),
+    );
+    return allUpdates;
+  }
+
+  private appendConnection = (
+    singleUser: IFullUser,
+    appendIds: mongo.ObjectId[],
+    eventId: mongo.ObjectId,
+  ) => {
+    const copyUser = { ...singleUser };
+    if (copyUser.connections === undefined) {
+      copyUser.connections = {};
+    }
+    appendIds.forEach((id) => {
+      copyUser.connections[id.toHexString()] = [
+        ...(copyUser.connections[id.toHexString()] || []),
+        eventId,
+      ];
+    });
+    return copyUser;
+  }
+
+  private removeConnection = (
+    singleUser: IFullUser,
+    removeIds: mongo.ObjectId[],
+    eventId: mongo.ObjectId,
+  ) => {
+    const copyUser = { ...singleUser };
+    if (copyUser.connections === undefined) {
+      return copyUser;
+    }
+    removeIds.forEach((id) => {
+      let connections = copyUser.connections[id.toHexString()];
+      connections = connections.splice(connections.indexOf(eventId), 1);
+    });
+    return copyUser;
   }
 }
