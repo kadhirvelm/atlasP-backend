@@ -5,6 +5,7 @@ import mongo from "mongodb";
 import { MONGO_URL } from "./config";
 import { EventRouters, EVENTS_ROOT } from "./events/eventsRouter";
 import { GENERAL_ROOT, GeneralRoutes } from "./general/generalRouter";
+import { GOOGLE_ROOT, GoogleRoutes } from "./google/googleRouter";
 import { USERS_ROOT, UsersRoutes } from "./users/userRouter";
 
 class PureApp {
@@ -29,6 +30,7 @@ class PureApp {
       this.app.use(GENERAL_ROOT, GeneralRoutes);
       this.app.use(EVENTS_ROOT, EventRouters(this.database));
       this.app.use(USERS_ROOT, UsersRoutes(this.database));
+      this.app.use(GOOGLE_ROOT, GoogleRoutes(this.database));
     }
 }
 
