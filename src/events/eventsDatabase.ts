@@ -62,7 +62,10 @@ export class EventDatabase {
   }
 
   public async fetchAll() {
-    return this.db.collection(EVENTS_COLLECTION).find().toArray();
+    return this.db
+      .collection(EVENTS_COLLECTION)
+      .find()
+      .toArray();
   }
 
   /** Util methods */

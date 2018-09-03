@@ -69,7 +69,10 @@ export class UserDatabase {
   }
 
   public async fetchAll() {
-    return this.db.collection(USERS_COLLECTION).find().toArray();
+    return this.db
+      .collection(USERS_COLLECTION)
+      .find()
+      .toArray();
   }
 
   /**
@@ -156,9 +159,7 @@ export class UserDatabase {
     ) => IFullUser,
   ) {
     const allUsers = await this.getManyUsers(userIds);
-    const usersWithConnections = allUsers.map(
-      (singleUser: IFullUser) => mapping(singleUser, userIds, eventId),
-    );
+    const usersWithConnections = allUsers.map((singleUser: IFullUser) => mapping(singleUser, userIds, eventId));
     const allUpdates = await Promise.all(
       usersWithConnections.map((singleUser: IFullUser) => this.db
         .collection(USERS_COLLECTION)
