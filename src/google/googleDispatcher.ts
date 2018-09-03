@@ -81,10 +81,11 @@ export class GoogleDispatcher {
     fs.readFile(TOKEN_PATH, async (err, token) => {
       let finalToken: Credentials | null;
       if (err || forceRefresh) {
-        return this.generateNewToken();
-      } else {
-        finalToken = JSON.parse(token.toString());
+        this.generateNewToken();
+        finalToken = null;
       }
+      finalToken = JSON.parse(token.toString());
+
       if (finalToken != null) {
         this.oAuth2Client.setCredentials(finalToken as Credentials);
         fs.writeFile(
