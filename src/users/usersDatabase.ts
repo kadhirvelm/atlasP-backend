@@ -28,7 +28,7 @@ export class UserDatabase {
       const newUser = await this.db
         .collection(USERS_COLLECTION)
         .insertOne(finalUser);
-      return newUser;
+      return { newUser, _id: newUser.insertedId };
     });
   }
 
@@ -47,7 +47,7 @@ export class UserDatabase {
     };
     await this.db
       .collection(USERS_COLLECTION)
-      .updateOne({ _id: user._id }, updatedUser);
+      .updateOne({ _id: user._id }, { $set: updatedUser });
     return { temporaryPassword: updatedUser.temporaryPassword };
   }
 
@@ -59,9 +59,9 @@ export class UserDatabase {
     const user = await this.retrieveUserWithPhoneNumber(phoneNumber);
     if (
       user == null
-      || (temporaryPassword !== undefined
+      && (temporaryPassword !== undefined
         && temporaryPassword !== user.temporaryPassword)
-      || hashPassword(password) !== user.password
+      && hashPassword(password) !== user.password
     ) {
       return { error: "Either user doesn't exist, or password is incorrect." };
     }

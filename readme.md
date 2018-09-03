@@ -28,6 +28,7 @@
 
 | REST | Route | Action | Implemented |
 | ---- | ---- | -------- | ---- |
+| POST | /new_token | writes a new google token | YES |
 | POST | /fetch_from_sheets | appends google sheet data to the database, mostly useful for initially populating the db | Yes |
 | POST | /write_to_sheets | writes USERS and EVENTS to google sheets | Yes |
 
