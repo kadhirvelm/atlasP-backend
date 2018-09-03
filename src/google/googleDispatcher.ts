@@ -9,7 +9,7 @@ import { EventDatabase, IRawEvent } from "../events";
 import { IUser, UserDatabase } from "../users";
 
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
-const TOKEN_PATH = ".google_tokens";
+const TOKEN_PATH = "~/.google_tokens";
 
 export interface IGoogleBatchFetch {
   spreadsheetId: string;
@@ -83,8 +83,9 @@ export class GoogleDispatcher {
       if (err || forceRefresh) {
         this.generateNewToken();
         finalToken = null;
+      } else {
+        finalToken = JSON.parse(token.toString());
       }
-      finalToken = JSON.parse(token.toString());
 
       if (finalToken != null) {
         this.oAuth2Client.setCredentials(finalToken as Credentials);
