@@ -68,6 +68,10 @@ export class UserDatabase {
     return sanitizeUser(user);
   }
 
+  public async fetchAll() {
+    return this.db.collection(USERS_COLLECTION).find().toArray();
+  }
+
   /**
    * Authenticated routes
    */
