@@ -16,13 +16,13 @@ services:
         depends_on:
             - mongodb
         environment:
-            - CLIENT_ID=$CLIENT_ID
-            - CLIENT_SECRET=$CLIENT_SECRET
-            - NODE_ENV=$NODE_ENV
-            - NODE_SECRET=$NODE_SECRET
-            - PORT=$PORT
-            - REDIRECT_URI=$REDIRECT_URI
-            - REACT_APP_SPREADSHEET=$REACT_APP_SPREADSHEET
+            - CLIENT_ID
+            - CLIENT_SECRET
+            - NODE_ENV
+            - NODE_SECRET
+            - PORT
+            - REDIRECT_URI
+            - REACT_APP_SPREADSHEET
     mongodb:
       restart: always
       container_name: atlasp_database
