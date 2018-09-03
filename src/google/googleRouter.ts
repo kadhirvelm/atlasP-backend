@@ -17,12 +17,24 @@ class PureGoogleRouter extends PureRouter {
   }
 
   private mountRoutes() {
+    this.router.post("/new_token", verifyToken, this.handleNewToken);
     this.router.post(
       "/fetch_from_sheets",
       verifyToken,
       this.handleFetchFromSheets,
     );
     this.router.post("/write_to_sheets", verifyToken, this.handleWriteToSheets);
+  }
+
+  private handleNewToken = async (
+    req: express.Request,
+    res: express.Response,
+  ) => {
+    const payload = await this.googleClient.postNewToken(req.body.token);
+    res.json({
+      message: "Attempted to write new token.",
+      payload,
+    });
   }
 
   private handleFetchFromSheets = async (

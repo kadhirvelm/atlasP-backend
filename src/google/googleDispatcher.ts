@@ -49,9 +49,9 @@ export class GoogleDispatcher {
         if (eventAttendees[eventID] === undefined) {
           eventAttendees[eventID] = { attendees: [], host: "" };
         }
-        eventAttendees[eventID].attendees.push(mongoUser.insertedId);
+        eventAttendees[eventID].attendees.push(mongoUser._id);
         if (eventID.substring(0, 4) === rawUser[0]) {
-          eventAttendees[eventID].host = mongoUser.insertedId;
+          eventAttendees[eventID].host = mongoUser._id;
         }
       });
     }
@@ -81,7 +81,7 @@ export class GoogleDispatcher {
     fs.readFile(TOKEN_PATH, async (err, token) => {
       let finalToken: Credentials | null;
       if (err || forceRefresh) {
-        finalToken = await this.generateNewToken();
+        return this.generateNewToken();
       } else {
         finalToken = JSON.parse(token.toString());
       }
@@ -94,6 +94,22 @@ export class GoogleDispatcher {
           (error) => error != null && console.error(error),
         );
       }
+    });
+  }
+
+  public postNewToken(token: any) {
+    this.oAuth2Client.getToken(token, (err, finalToken) => {
+      if (err !== null) {
+        // tslint:disable-next-line:no-console
+        console.error(err);
+      }
+      fs.writeFile(
+        TOKEN_PATH,
+        JSON.stringify(finalToken),
+        // tslint:disable-next-line:no-console
+        (error) => error != null && console.error(error),
+      );
+      this.authorize();
     });
   }
 
@@ -175,29 +191,13 @@ export class GoogleDispatcher {
 
   private formatForWriting = (multipleObjects: any) => multipleObjects.map((singleObject: any) => Object.values(singleObject).map((value: any) => JSON.stringify(value)));
 
-  private async generateNewToken(): Promise<Credentials> {
-    return new Promise((resolve, reject) => {
-      const authUrl = this.oAuth2Client.generateAuthUrl({
-        access_type: "online",
-        scope: SCOPES,
-      });
-      // tslint:disable-next-line:no-console
-      console.log("Authorize here:", authUrl);
-      const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-      });
-      rl.question("Enter the code from that page here: ", (code) => {
-        rl.close();
-        this.oAuth2Client.getToken(code, (err, token) => {
-          if (err) {
-            reject(err);
-          }
-          // tslint:disable-next-line:no-console
-          console.log("Set the authorization token.");
-          resolve(token);
-        });
-      });
+  private async generateNewToken() {
+    const authUrl = this.oAuth2Client.generateAuthUrl({
+      access_type: "online",
+      scope: SCOPES,
     });
+    // tslint:disable-next-line:no-console
+    console.log("Authorize here:", authUrl);
+    return "New token generation needed.";
   }
 }
