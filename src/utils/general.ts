@@ -12,7 +12,10 @@ export function sendError(res: express.Response, message: string[]) {
   });
 }
 
-export function sanitizePhoneNumber(phoneNumber: string) {
+export function sanitizePhoneNumber(phoneNumber: string | undefined) {
+  if (phoneNumber === undefined) {
+    return null;
+  }
   return phoneNumber.slice().replace(/![0-9]/g, "");
 }
 

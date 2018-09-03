@@ -24,6 +24,13 @@
 | POST | /getOne | fetches a single event { eventId: string } | Yes |
 | POST | /getMany | gets many events { eventIds: string[] } | Yes |
 
+### /google
+
+| REST | Route | Action | Implemented |
+| ---- | ---- | -------- | ---- |
+| POST | /fetch_from_sheets | appends google sheet data to the database, mostly useful for initially populating the db | Yes |
+| POST | /write_to_sheets | writes USERS and EVENTS to google sheets | Yes |
+
 ## Contribution
 
 ### RDD

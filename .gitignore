@@ -74,3 +74,6 @@ typings/
 
 # Distribution files
 /dist/**/*
+
+# Custom files
+.google_tokens

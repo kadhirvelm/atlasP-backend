@@ -12,13 +12,15 @@ export class EventDatabase {
     this.userDatabase = new UserDatabase(db);
   }
 
+  /** Private routes */
+
   public async createNewEvent(event: IRawEvent) {
     return handleError(async () => {
       const finalEvent = this.cleanRawIntoFinal(event);
       const newEvent = await this.db
         .collection(EVENTS_COLLECTION)
         .insertOne(finalEvent);
-      this.userDatabase.indexUserEvents(
+      await this.userDatabase.indexUserEvents(
         [finalEvent.host, ...finalEvent.attendees],
         newEvent.insertedId,
       );
@@ -36,7 +38,7 @@ export class EventDatabase {
         .collection(EVENTS_COLLECTION)
         .replaceOne({ _id: eventId }, finalEvent);
 
-      this.userDatabase.indexUserEvents(
+      await this.userDatabase.indexUserEvents(
         [finalEvent.host, ...finalEvent.attendees],
         eventId,
       );
@@ -58,6 +60,15 @@ export class EventDatabase {
       return allEvents.toArray();
     });
   }
+
+  public async fetchAll() {
+    return this.db
+      .collection(EVENTS_COLLECTION)
+      .find()
+      .toArray();
+  }
+
+  /** Util methods */
 
   private cleanRawIntoFinal = (event: IRawEvent): IEvent => ({
     ...event,
