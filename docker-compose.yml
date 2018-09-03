@@ -5,8 +5,6 @@ services:
         restart: always
         container_name: atlasp_server
         image: debian/latest
-        environment:
-            - NODE_ENV=production
         volumes:
             - .:/var/www:rw
         ports:
