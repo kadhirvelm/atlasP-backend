@@ -2,7 +2,7 @@ FROM node:10
 
 WORKDIR /usr/src/app
 
-RUN touch ~/.google_tokens
+RUN touch ./.google_tokens
 
 COPY package.json ./
 COPY yarn.lock ./

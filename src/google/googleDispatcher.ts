@@ -3,13 +3,12 @@ import { OAuth2Client } from "google-auth-library";
 import { Credentials } from "google-auth-library/build/src/auth/credentials";
 import { GoogleApis } from "googleapis";
 import mongo from "mongodb";
-import readline from "readline";
 
 import { EventDatabase, IRawEvent } from "../events";
 import { IUser, UserDatabase } from "../users";
 
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
-const TOKEN_PATH = "~/.google_tokens";
+const TOKEN_PATH = ".google_tokens";
 
 export interface IGoogleBatchFetch {
   spreadsheetId: string;
@@ -80,7 +79,7 @@ export class GoogleDispatcher {
     );
     fs.readFile(TOKEN_PATH, async (err, token) => {
       let finalToken: Credentials | null;
-      if (err || forceRefresh) {
+      if (err || token.length === 0 || forceRefresh) {
         this.generateNewToken();
         finalToken = null;
       } else {
@@ -105,11 +104,9 @@ export class GoogleDispatcher {
         // tslint:disable-next-line:no-console
         console.error(err);
       }
-      fs.writeFile(
+      fs.writeFileSync(
         TOKEN_PATH,
         JSON.stringify(finalToken),
-        // tslint:disable-next-line:no-console
-        (error) => error != null && console.error(error),
       );
       this.authorize();
     });
