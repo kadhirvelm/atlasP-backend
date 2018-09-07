@@ -5,3 +5,7 @@ export function handleError(func: () => any) {
     return { error: e.toString() };
   }
 }
+
+export function getStatus(payload: any) {
+  return payload.error === undefined ? 200 : 400;
+}

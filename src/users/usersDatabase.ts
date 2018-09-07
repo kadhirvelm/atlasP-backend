@@ -59,9 +59,9 @@ export class UserDatabase {
     const user = await this.retrieveUserWithPhoneNumber(phoneNumber);
     if (
       user == null
-      && (temporaryPassword !== undefined
+      || ((temporaryPassword !== undefined
         && temporaryPassword !== user.temporaryPassword)
-      && hashPassword(password) !== user.password
+      && hashPassword(password) !== user.password)
     ) {
       return { error: "Either user doesn't exist, or password is incorrect." };
     }
