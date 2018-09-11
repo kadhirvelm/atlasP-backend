@@ -19,15 +19,22 @@ export function sanitizePhoneNumber(phoneNumber: string | undefined) {
   return phoneNumber.slice().replace(/![0-9]/g, "");
 }
 
-export function sanitizeUser(user: IFullUser) {
+export function sanitizeUser(user: IFullUser, shouldGenerateToken: boolean = true) {
   const finalUser = { ...user };
   delete finalUser.password;
   delete finalUser.temporaryPassword;
-  const authenticationToken = generateAuthenticationToken(user._id);
+  const authenticationToken = shouldGenerateToken && generateAuthenticationToken(user._id);
   return {
     token: authenticationToken,
     userDetails: finalUser,
   };
+}
+
+export function fullSanitizeUser(user: IFullUser) {
+  const finalSanitization = sanitizeUser(user, false);
+  delete finalSanitization.userDetails.connections;
+  delete finalSanitization.userDetails.claimed;
+  return finalSanitization.userDetails;
 }
 
 export function parseIntoObjectIDs(ids: string[]): mongo.ObjectId[] {

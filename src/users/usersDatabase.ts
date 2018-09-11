@@ -4,6 +4,7 @@ import { IFullUser, IUser, USERS_COLLECTION } from "./userConstants";
 
 import { IEvent } from "../events";
 import {
+  fullSanitizeUser,
   handleError,
   hashPassword,
   isValidStringID,
@@ -91,7 +92,8 @@ export class UserDatabase {
       const allUsers = await this.db
         .collection(USERS_COLLECTION)
         .find({ _id: { $in: finalIds } });
-      return allUsers.toArray();
+      const finalUsers = await allUsers.toArray();
+      return finalUsers.map(fullSanitizeUser);
     });
   }
 
