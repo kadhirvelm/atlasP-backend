@@ -23,17 +23,8 @@ function hasCorrectKeys(body: any, checkForKeys: string[]) {
   return errorMessages;
 }
 
-export function isValidUser(body: any) {
-  const errorMessages = hasCorrectKeys(
-    body,
-    validUserKeys.filter(
-      (key) => key !== "password" && key !== "temporaryPassword",
-    ),
-  );
-  if (errorMessages.length > 0) {
-    return errorMessages;
-  }
-
+export function validUserBodyChecker(body: any) {
+  const errorMessages = [];
   if (!isNumber(body.age)) {
     errorMessages.push(`Age is not a number: ${body.age}`);
   }
@@ -52,12 +43,25 @@ export function isValidUser(body: any) {
   return errorMessages;
 }
 
+export function isValidUser(body: any) {
+  const errorMessages = hasCorrectKeys(
+    body,
+    validUserKeys.filter(
+      (key) => key !== "password" && key !== "temporaryPassword",
+    ),
+  );
+  if (errorMessages.length > 0) {
+    return errorMessages;
+  }
+  return validUserBodyChecker(body);
+}
+
 export function isValidUserUpdate(body: any) {
   const errorMessages = hasValidUserKeys(body);
   if (!isValidStringArray(Object.values(body))) {
-    errorMessages.push("Cannot include empty or null fields.");
+    errorMessages.push("Cannot leave fields blank.");
   }
-  return errorMessages;
+  return validUserBodyChecker(body);
 }
 
 export function isValidLogin(body: any) {

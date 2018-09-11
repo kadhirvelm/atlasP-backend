@@ -83,7 +83,7 @@ class PureUsersRouter extends PureRouter {
       req.body.password,
       req.body.temporaryPassword,
     );
-    return res.json({
+    return res.status(getStatus(payload)).json({
       message: "Attempted login.",
       payload,
     });

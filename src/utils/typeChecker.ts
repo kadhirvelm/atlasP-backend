@@ -12,7 +12,7 @@ export function isValidPhoneNumber(item: any) {
 }
 
 export function isNumber(item: any): item is number {
-  return typeof item === "number";
+  return typeof item === "number" || parseInt(item, 10).toLocaleString() === item;
 }
 
 export function isBoolean(item: any): item is boolean {
