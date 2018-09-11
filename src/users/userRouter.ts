@@ -11,6 +11,7 @@ import { UserDatabase } from "./usersDatabase";
 
 import { PureRouter } from "../general";
 import {
+  getStatus,
   IAuthenticatedRequest,
   isValidMongoID,
   isValidMongoIDArray,
@@ -64,7 +65,7 @@ class PureUsersRouter extends PureRouter {
       return sendError(res, [`Invalid phone number: ${req.body.phoneNumber}`]);
     }
     const payload = await this.user.claim(req.body.phoneNumber);
-    return res.json({
+    return res.status(getStatus(payload)).json({
       message: "Attempted claim.",
       payload,
     });
@@ -82,7 +83,7 @@ class PureUsersRouter extends PureRouter {
       req.body.password,
       req.body.temporaryPassword,
     );
-    return res.json({
+    return res.status(getStatus(payload)).json({
       message: "Attempted login.",
       payload,
     });

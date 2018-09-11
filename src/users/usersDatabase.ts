@@ -48,7 +48,7 @@ export class UserDatabase {
     await this.db
       .collection(USERS_COLLECTION)
       .updateOne({ _id: user._id }, { $set: updatedUser });
-    return { temporaryPassword: updatedUser.temporaryPassword };
+    return { _id: user._id, temporaryPassword: updatedUser.temporaryPassword };
   }
 
   public async login(
@@ -59,11 +59,11 @@ export class UserDatabase {
     const user = await this.retrieveUserWithPhoneNumber(phoneNumber);
     if (
       user == null
-      && (temporaryPassword !== undefined
+      || (temporaryPassword !== undefined
         && temporaryPassword !== user.temporaryPassword)
-      && hashPassword(password) !== user.password
+      || (password !== undefined && hashPassword(password) !== user.password)
     ) {
-      return { error: "Either user doesn't exist, or password is incorrect." };
+      return { error: "These are invalid credentials." };
     }
     return sanitizeUser(user);
   }
