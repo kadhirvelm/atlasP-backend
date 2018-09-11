@@ -59,7 +59,8 @@ export class UserDatabase {
     const user = await this.retrieveUserWithPhoneNumber(phoneNumber);
     if (
       user == null
-      || (temporaryPassword !== undefined && temporaryPassword !== user.temporaryPassword)
+      || (temporaryPassword !== undefined
+        && temporaryPassword !== user.temporaryPassword)
       || (password !== undefined && hashPassword(password) !== user.password)
     ) {
       return { error: "These are invalid credentials." };

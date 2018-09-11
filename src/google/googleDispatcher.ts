@@ -104,10 +104,7 @@ export class GoogleDispatcher {
         // tslint:disable-next-line:no-console
         console.error(err);
       }
-      fs.writeFileSync(
-        TOKEN_PATH,
-        JSON.stringify(finalToken),
-      );
+      fs.writeFileSync(TOKEN_PATH, JSON.stringify(finalToken));
       this.authorize();
     });
   }
