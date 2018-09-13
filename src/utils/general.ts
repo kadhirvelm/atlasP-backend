@@ -5,11 +5,15 @@ import { IFullUser } from "../users";
 
 import { generateAuthenticationToken } from "./security";
 
-export function sendError(res: express.Response, message: string[]) {
-  res.status(400).json({
+export function sendError(res?: express.Response, message?: string[]) {
+  const errorMessage = {
     message,
     status: "Error, improperly formatted data",
-  });
+  };
+  if (res === undefined) {
+    return errorMessage;
+  }
+  res.status(400).json(errorMessage);
 }
 
 export function sanitizePhoneNumber(phoneNumber: string | undefined) {

@@ -37,7 +37,7 @@ export function validUserBodyChecker(body: any) {
   if (!isString(body.name)) {
     errorMessages.push(`Name is not a string: ${body.name}`);
   }
-  if (!isValidPhoneNumber(body.phoneNumber)) {
+  if (body.phoneNumber !== "" && !isValidPhoneNumber(body.phoneNumber)) {
     errorMessages.push(`Phone number is not valid: ${body.phoneNumber}`);
   }
   return errorMessages;
