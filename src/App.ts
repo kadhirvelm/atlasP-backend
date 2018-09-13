@@ -20,7 +20,7 @@ class PureApp {
         if (process.env.NODE_ENV === "development") {
           res.header("Access-Control-Allow-Origin", "*");
         } else {
-          res.header("Access-Control-Allow-Origin", "http://54.153.122.67:3001");
+          res.header("Access-Control-Allow-Origin", "http://atlasp.s3-website-us-west-1.amazonaws.com");
         }
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, access-token");
         next();
