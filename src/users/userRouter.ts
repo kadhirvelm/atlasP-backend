@@ -94,19 +94,39 @@ class PureUsersRouter extends PureRouter {
    */
 
   private mountAuthenticatedRoutes() {
+    this.router.post("/new-user", verifyToken, this.handleUserCreatingNewUser);
     this.router.post("/getOne", verifyToken, this.handleGetSingleUser);
     this.router.post("/getMany", verifyToken, this.handleGetManyUsers);
     this.router.post("/update", verifyToken, this.handleUpdateUser);
   }
 
+  private handleUserCreatingNewUser = async (
+    req: IAuthenticatedRequest,
+    res: express.Response,
+  ) => {
+    const errorMessages = isValidUser(req.body);
+    if (errorMessages.length > 0) {
+      return sendError(res, errorMessages);
+    }
+    const newUser = await this.user.createNewUser(req.body as IUser);
+    await this.user.indexUserEvents([newUser._id, req.AUTHENTICATED_USER_ID]);
+    return res.json({
+      message: "Attempted to create a new user.",
+      payload: { newUserId: newUser._id },
+    });
+  }
+
   private handleGetSingleUser = async (
-    req: express.Request,
+    req: IAuthenticatedRequest,
     res: express.Response,
   ) => {
     if (!isValidMongoID(req.body.id)) {
       return sendError(res, [`id is not a valid string: ${req.body.id}`]);
     }
-    const payload = await this.user.getUser(req.body.id);
+    const payload = await this.user.getUser(
+      req.body.id,
+      !(req.body.id === req.AUTHENTICATED_USER_ID.toHexString()),
+    );
     return res.json({
       message: "Attempted single user retrieval.",
       payload,

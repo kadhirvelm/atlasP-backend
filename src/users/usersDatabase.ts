@@ -80,20 +80,23 @@ export class UserDatabase {
    * Authenticated routes
    */
 
-  public async getUser(id: string) {
-    return this.getManyUsers([id]);
+  public async getUser(id: string, shouldFullySanitize: boolean = true) {
+    return this.getManyUsers([id], shouldFullySanitize);
   }
 
   public async getManyUsers(
     ids: string[] | mongo.ObjectId[],
+    sanitize: boolean = true,
   ): Promise<IFullUser[]> {
     return handleError(async () => {
       const finalIds = isValidStringID(ids) ? parseIntoObjectIDs(ids) : ids;
       const allUsers = await this.db
         .collection(USERS_COLLECTION)
         .find({ _id: { $in: finalIds } });
-      const finalUsers = await allUsers.toArray();
-      return finalUsers.map(fullSanitizeUser);
+      const finalUsers = (await allUsers.toArray()) as IFullUser[];
+      return sanitize
+        ? finalUsers.map(fullSanitizeUser)
+        : finalUsers.map((user) => sanitizeUser(user).userDetails);
     });
   }
 
@@ -116,7 +119,7 @@ export class UserDatabase {
 
   public async indexUserEvents(
     userIds: mongo.ObjectId[],
-    eventId: mongo.ObjectId,
+    eventId?: mongo.ObjectId,
   ) {
     return this.changeUserIndex(userIds, eventId, this.appendConnection);
   }
@@ -160,7 +163,7 @@ export class UserDatabase {
       eventId: mongo.ObjectId,
     ) => IFullUser,
   ) {
-    const allUsers = await this.getManyUsers(userIds);
+    const allUsers = await this.getManyUsers(userIds, false);
     const usersWithConnections = allUsers.map((singleUser: IFullUser) => mapping(singleUser, userIds, eventId));
     const allUpdates = await Promise.all(
       usersWithConnections.map((singleUser: IFullUser) => this.db
@@ -173,7 +176,7 @@ export class UserDatabase {
   private appendConnection = (
     singleUser: IFullUser,
     appendIds: mongo.ObjectId[],
-    eventId: mongo.ObjectId,
+    eventId?: mongo.ObjectId,
   ) => {
     const copyUser = { ...singleUser };
     if (copyUser.connections === undefined) {
@@ -182,7 +185,7 @@ export class UserDatabase {
     appendIds.forEach((id) => {
       copyUser.connections[id.toHexString()] = [
         ...(copyUser.connections[id.toHexString()] || []),
-        eventId,
+        ...(eventId === undefined ? [] : [eventId]),
       ];
     });
     return copyUser;
