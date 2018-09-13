@@ -24,7 +24,7 @@ export class EventDatabase {
         [finalEvent.host, ...finalEvent.attendees],
         newEvent.insertedId,
       );
-      return newEvent;
+      return { id: newEvent.insertedId, newEvent };
     });
   }
 
