@@ -93,8 +93,10 @@ export class UserDatabase {
       const allUsers = await this.db
         .collection(USERS_COLLECTION)
         .find({ _id: { $in: finalIds } });
-      const finalUsers = await allUsers.toArray() as IFullUser[];
-      return sanitize ? finalUsers.map(fullSanitizeUser) : finalUsers.map((user) => sanitizeUser(user).userDetails);
+      const finalUsers = (await allUsers.toArray()) as IFullUser[];
+      return sanitize
+        ? finalUsers.map(fullSanitizeUser)
+        : finalUsers.map((user) => sanitizeUser(user).userDetails);
     });
   }
 

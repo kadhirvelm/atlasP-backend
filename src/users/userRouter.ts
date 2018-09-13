@@ -109,7 +109,7 @@ class PureUsersRouter extends PureRouter {
       return sendError(res, errorMessages);
     }
     const newUser = await this.user.createNewUser(req.body as IUser);
-    await this.user.indexUserEvents([ newUser._id, req.AUTHENTICATED_USER_ID ]);
+    await this.user.indexUserEvents([newUser._id, req.AUTHENTICATED_USER_ID]);
     return res.json({
       message: "Attempted to create a new user.",
       payload: { newUserId: newUser._id },
@@ -123,7 +123,10 @@ class PureUsersRouter extends PureRouter {
     if (!isValidMongoID(req.body.id)) {
       return sendError(res, [`id is not a valid string: ${req.body.id}`]);
     }
-    const payload = await this.user.getUser(req.body.id, !(req.body.id === req.AUTHENTICATED_USER_ID.toHexString()));
+    const payload = await this.user.getUser(
+      req.body.id,
+      !(req.body.id === req.AUTHENTICATED_USER_ID.toHexString()),
+    );
     return res.json({
       message: "Attempted single user retrieval.",
       payload,

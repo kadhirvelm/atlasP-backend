@@ -9,6 +9,7 @@
 | REST | Route | Action | Implemented |
 | ---- | ---- | -------- | ---- |
 | POST | /new | create a new user { User } | Yes |
+| POST | /new-user | fetches a single user, optionally not fully sanitizing if the token matches the request | Yes |
 | POST | /getOne | fetches the user with { id: string }, returns `[]` if no user exists | Yes |
 | POST | /getMany | fetches the user with { ids: string[] }, returns `[]` if no user exists | Yes |
 | POST | /claim | claims a user account, giving it a phone number | Yes |

@@ -10,10 +10,10 @@ export function sendError(res?: express.Response, message?: string[]) {
     message,
     status: "Error, improperly formatted data",
   };
-  if (res === undefined) {
-    return errorMessage;
+  if (res !== undefined) {
+    res.status(400).json(errorMessage);
   }
-  res.status(400).json(errorMessage);
+  return errorMessage;
 }
 
 export function sanitizePhoneNumber(phoneNumber: string | undefined) {
@@ -23,7 +23,10 @@ export function sanitizePhoneNumber(phoneNumber: string | undefined) {
   return phoneNumber.slice().replace(/![0-9]/g, "");
 }
 
-export function sanitizeUser(user: IFullUser, shouldGenerateToken: boolean = true) {
+export function sanitizeUser(
+  user: IFullUser,
+  shouldGenerateToken: boolean = true,
+) {
   const finalUser = { ...user };
   delete finalUser.password;
   delete finalUser.temporaryPassword;
