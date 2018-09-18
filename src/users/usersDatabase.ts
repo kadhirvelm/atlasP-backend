@@ -183,10 +183,14 @@ export class UserDatabase {
       copyUser.connections = {};
     }
     appendIds.forEach((id) => {
-      copyUser.connections[id.toHexString()] = [
-        ...(copyUser.connections[id.toHexString()] || []),
-        ...(eventId === undefined ? [] : [eventId]),
-      ];
+      const finalEventId = eventId === undefined ? [] : [eventId];
+      const currentConnections = copyUser.connections[id.toHexString()] || [];
+      if (!currentConnections.includes(finalEventId[0])) {
+        copyUser.connections[id.toHexString()] = [
+          ...(currentConnections),
+          ...(finalEventId),
+        ];
+      }
     });
     return copyUser;
   }
