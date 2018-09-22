@@ -5,6 +5,8 @@ import { IFullUser } from "../users";
 
 import { generateAuthenticationToken } from "./security";
 
+const ADMINS = ["5b9a892f4f36eb0020736b82"];
+
 export function sendError(res?: express.Response, message?: string[]) {
   const errorMessage = {
     message,
@@ -46,4 +48,8 @@ export function fullSanitizeUser(user: IFullUser) {
 
 export function parseIntoObjectIDs(ids: string[]): mongo.ObjectId[] {
   return ids.map((id) => new mongo.ObjectId(id));
+}
+
+export function isAdminUser(id: mongo.ObjectId) {
+  return ADMINS.includes(id.toHexString());
 }

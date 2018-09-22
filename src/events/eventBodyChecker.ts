@@ -1,6 +1,7 @@
 import mongo from "mongodb";
 
 import {
+  isAdminUser,
   isString,
   isValidDate,
   isValidMongoID,
@@ -30,8 +31,9 @@ export function isValidEvent(body: any, userId: mongo.ObjectId) {
   if (
     !userId.equals(body.host)
     && !userIdIsInAttendees(body.attendees as string[], userId)
+    && !isAdminUser(userId)
   ) {
-    errorMessages.push("Authenticated user is not in the event.");
+    errorMessages.push("You're not in the event.");
   }
   return errorMessages;
 }
