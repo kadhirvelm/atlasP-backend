@@ -24,6 +24,7 @@
 | POST | /update | updates an existing event given { eventId: string, ...body } | Yes |
 | POST | /getOne | fetches a single event { eventId: string } | Yes |
 | POST | /getMany | gets many events { eventIds: string[] } | Yes |
+| GET | /reindex | reindexes all users and event connections | Yes |
 
 ### /google
 

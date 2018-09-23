@@ -30,7 +30,7 @@ class PureEventsRouter extends PureRouter {
     this.router.put("/update", verifyToken, this.handleUpdateEvent);
     this.router.post("/getOne", verifyToken, this.handleGetOneEvent);
     this.router.post("/getMany", verifyToken, this.handleGetManyEvents);
-    this.router.post("/reindex", verifyToken, this.handleReindex);
+    this.router.get("/reindex", verifyToken, this.handleReindex);
   }
 
   private handleCreateEvent = async (
