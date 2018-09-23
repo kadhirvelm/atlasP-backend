@@ -8,7 +8,9 @@ export interface IUser {
   phoneNumber: string;
 }
 
-export interface IUserConnections { [id: string]: mongo.ObjectId[]; }
+export interface IUserConnections {
+  [id: string]: mongo.ObjectId[];
+}
 export interface IFullUser extends IUser {
   _id: mongo.ObjectId;
   claimed: boolean;

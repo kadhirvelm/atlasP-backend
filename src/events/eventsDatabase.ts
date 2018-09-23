@@ -65,7 +65,10 @@ export class EventDatabase {
     await this.userDatabase.removeAllConnections();
     const events = await this.fetchAll();
     for (const event of events) {
-      await this.userDatabase.indexUserEvents([event.host, ...event.attendees], event._id);
+      await this.userDatabase.indexUserEvents(
+        [event.host, ...event.attendees],
+        event._id,
+      );
     }
     return { message: "Successfully reindexed all connections." };
   }

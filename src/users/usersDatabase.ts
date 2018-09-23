@@ -1,6 +1,11 @@
 import mongo from "mongodb";
 
-import { IFullUser, IUser, IUserConnections, USERS_COLLECTION } from "./userConstants";
+import {
+  IFullUser,
+  IUser,
+  IUserConnections,
+  USERS_COLLECTION,
+} from "./userConstants";
 
 import { IEvent } from "../events";
 import {
@@ -70,7 +75,9 @@ export class UserDatabase {
   }
 
   public async removeAllConnections() {
-    return this.db.collection(USERS_COLLECTION).updateMany({}, { $set: { connections: {} } });
+    return this.db
+      .collection(USERS_COLLECTION)
+      .updateMany({}, { $set: { connections: {} } });
   }
 
   public async fetchAll() {
@@ -168,9 +175,17 @@ export class UserDatabase {
     ) => IUserConnections,
   ) {
     const allUsers = await this.getManyUsers(userIds, false);
-    const usersWithConnections = allUsers.map((singleUser: IFullUser) => ({ id: singleUser._id, connections: mapping(singleUser.connections, userIds, eventId) }));
+    const usersWithConnections = allUsers.map((singleUser: IFullUser) => ({
+      connections: mapping(singleUser.connections, userIds, eventId),
+      id: singleUser._id,
+    }));
     for (const singleUser of usersWithConnections) {
-      await this.db.collection(USERS_COLLECTION).updateOne({ _id: singleUser.id }, { $set: { connections: singleUser.connections } });
+      await this.db
+        .collection(USERS_COLLECTION)
+        .updateOne(
+          { _id: singleUser.id },
+          { $set: { connections: singleUser.connections } },
+        );
     }
     return { message: "Successfully reindexed connection" };
   }
@@ -185,7 +200,9 @@ export class UserDatabase {
       const finalEventId = eventId === undefined ? [] : [eventId];
       const currentConnections = copyUserConnections[id.toHexString()] || [];
       if (!currentConnections.includes(finalEventId[0])) {
-        copyUserConnections[id.toHexString()] = currentConnections.concat(finalEventId);
+        copyUserConnections[id.toHexString()] = currentConnections.concat(
+          finalEventId,
+        );
       }
     });
     return copyUserConnections;
@@ -203,7 +220,10 @@ export class UserDatabase {
     removeIds.forEach((id) => {
       let currentConnections = copyUserConnections[id.toHexString()] || [];
       if (currentConnections.includes(eventId)) {
-        currentConnections = currentConnections.splice(currentConnections.indexOf(eventId), 1);
+        currentConnections = currentConnections.splice(
+          currentConnections.indexOf(eventId),
+          1,
+        );
       }
     });
     return copyUserConnections;
