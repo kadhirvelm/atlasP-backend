@@ -61,6 +61,15 @@ export class EventDatabase {
     });
   }
 
+  public async reindexAllEvents() {
+    await this.userDatabase.removeAllConnections();
+    const events = await this.fetchAll();
+    for (const event of events) {
+      await this.userDatabase.indexUserEvents([event.host, ...event.attendees], event._id);
+    }
+    return { message: "Successfully reindexed all connections." };
+  }
+
   public async fetchAll() {
     return this.db
       .collection(EVENTS_COLLECTION)

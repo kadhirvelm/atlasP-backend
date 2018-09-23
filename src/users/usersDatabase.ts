@@ -1,6 +1,6 @@
 import mongo from "mongodb";
 
-import { IFullUser, IUser, USERS_COLLECTION } from "./userConstants";
+import { IFullUser, IUser, IUserConnections, USERS_COLLECTION } from "./userConstants";
 
 import { IEvent } from "../events";
 import {
@@ -67,6 +67,10 @@ export class UserDatabase {
       return { error: "These are invalid credentials." };
     }
     return sanitizeUser(user);
+  }
+
+  public async removeAllConnections() {
+    return this.db.collection(USERS_COLLECTION).updateMany({}, { $set: { connections: {} } });
   }
 
   public async fetchAll() {
@@ -158,56 +162,50 @@ export class UserDatabase {
     userIds: mongo.ObjectId[],
     eventId: mongo.ObjectId,
     mapping: (
-      singleUser: IFullUser,
+      singleUserConnections: IUserConnections,
       appendIds: mongo.ObjectId[],
       eventId: mongo.ObjectId,
-    ) => IFullUser,
+    ) => IUserConnections,
   ) {
     const allUsers = await this.getManyUsers(userIds, false);
-    const usersWithConnections = allUsers.map((singleUser: IFullUser) => mapping(singleUser, userIds, eventId));
-    const allUpdates = await Promise.all(
-      usersWithConnections.map((singleUser: IFullUser) => this.db
-        .collection(USERS_COLLECTION)
-        .updateOne({ _id: singleUser._id }, { $set: { ...singleUser } })),
-    );
-    return allUpdates;
+    const usersWithConnections = allUsers.map((singleUser: IFullUser) => ({ id: singleUser._id, connections: mapping(singleUser.connections, userIds, eventId) }));
+    for (const singleUser of usersWithConnections) {
+      await this.db.collection(USERS_COLLECTION).updateOne({ _id: singleUser.id }, { $set: { connections: singleUser.connections } });
+    }
+    return { message: "Successfully reindexed connection" };
   }
 
   private appendConnection = (
-    singleUser: IFullUser,
+    singleUserConnections: IUserConnections,
     appendIds: mongo.ObjectId[],
     eventId?: mongo.ObjectId,
   ) => {
-    const copyUser = { ...singleUser };
-    if (copyUser.connections === undefined) {
-      copyUser.connections = {};
-    }
+    const copyUserConnections = { ...singleUserConnections } || {};
     appendIds.forEach((id) => {
       const finalEventId = eventId === undefined ? [] : [eventId];
-      const currentConnections = copyUser.connections[id.toHexString()] || [];
+      const currentConnections = copyUserConnections[id.toHexString()] || [];
       if (!currentConnections.includes(finalEventId[0])) {
-        copyUser.connections[id.toHexString()] = [
-          ...(currentConnections),
-          ...(finalEventId),
-        ];
+        copyUserConnections[id.toHexString()] = currentConnections.concat(finalEventId);
       }
     });
-    return copyUser;
+    return copyUserConnections;
   }
 
   private removeConnection = (
-    singleUser: IFullUser,
+    singleUserConnections: IUserConnections,
     removeIds: mongo.ObjectId[],
     eventId: mongo.ObjectId,
   ) => {
-    const copyUser = { ...singleUser };
-    if (copyUser.connections === undefined) {
-      return copyUser;
+    const copyUserConnections = { ...singleUserConnections };
+    if (copyUserConnections === undefined) {
+      return copyUserConnections;
     }
     removeIds.forEach((id) => {
-      let connections = copyUser.connections[id.toHexString()];
-      connections = connections.splice(connections.indexOf(eventId), 1);
+      let currentConnections = copyUserConnections[id.toHexString()] || [];
+      if (currentConnections.includes(eventId)) {
+        currentConnections = currentConnections.splice(currentConnections.indexOf(eventId), 1);
+      }
     });
-    return copyUser;
+    return copyUserConnections;
   }
 }
