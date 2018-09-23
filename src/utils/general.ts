@@ -5,7 +5,7 @@ import { IFullUser } from "../users";
 
 import { generateAuthenticationToken } from "./security";
 
-const ADMINS = ["5b9a892f4f36eb0020736b82"];
+const ADMINS = ["5b9a892f4f36eb0020736b82", "5b9a88d54f36eb0020736b43"];
 
 export function sendError(res?: express.Response, message?: string[]) {
   const errorMessage = {
