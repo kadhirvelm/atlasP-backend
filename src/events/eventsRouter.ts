@@ -30,6 +30,7 @@ class PureEventsRouter extends PureRouter {
     this.router.put("/update", verifyToken, this.handleUpdateEvent);
     this.router.post("/getOne", verifyToken, this.handleGetOneEvent);
     this.router.post("/getMany", verifyToken, this.handleGetManyEvents);
+    this.router.get("/reindex", verifyToken, this.handleReindex);
   }
 
   private handleCreateEvent = async (
@@ -92,6 +93,17 @@ class PureEventsRouter extends PureRouter {
     const payload = await this.events.getManyEvents(req.body.eventIds);
     return res.json({
       message: "Attempted to get many events",
+      payload,
+    });
+  }
+
+  private handleReindex = async (
+    req: IAuthenticatedRequest,
+    res: express.Response,
+  ) => {
+    const payload = await this.events.reindexAllEvents();
+    return res.json({
+      message: "Attempted full reindex of all events and users",
       payload,
     });
   }

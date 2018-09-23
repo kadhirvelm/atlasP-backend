@@ -7,12 +7,16 @@ export interface IUser {
   name: string;
   phoneNumber: string;
 }
+
+export interface IUserConnections {
+  [id: string]: mongo.ObjectId[];
+}
 export interface IFullUser extends IUser {
   _id: mongo.ObjectId;
   claimed: boolean;
   temporaryPassword: number;
   password: string;
-  connections?: { [id: string]: mongo.ObjectId[] };
+  connections?: IUserConnections;
 }
 export const validGenders = ["m", "f", "x"];
 export const validUserKeys = [
