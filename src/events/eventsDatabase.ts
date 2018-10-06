@@ -84,7 +84,7 @@ export class EventDatabase {
 
   private cleanRawIntoFinal = (event: IRawEvent): IEvent => ({
     ...event,
-    attendees: parseIntoObjectIDs(event.attendees),
+    attendees: parseIntoObjectIDs(Array.from(new Set(event.attendees))),
     date: new Date(event.date),
     host: new mongo.ObjectId(event.host),
   })
