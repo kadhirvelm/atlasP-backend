@@ -92,7 +92,7 @@ export class ReportGenerator {
       subject: `AtlasP Text Report - ${new Date().toLocaleDateString()} (${
         process.env.NODE_ENV
       })`,
-      to: "kadhirvelm@gmail.com",
+      to: "luke.walquist@gmail.com, kadhirvelm@gmail.com",
     };
     transporter.sendMail(mailOptions, (err, info) => {
       if (err) {
