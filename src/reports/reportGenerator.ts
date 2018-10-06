@@ -1,6 +1,7 @@
 import { CronJob } from "cron";
 import mongo from "mongodb";
 import nodemailer from "nodemailer";
+import ses from "nodemailer-ses-transport";
 
 import { EVENTS_COLLECTION } from "../events";
 import { USERS_COLLECTION } from "../users";
@@ -68,13 +69,11 @@ export class ReportGenerator {
     eventsMadeInLast24Hours: any[],
     sanitizedUsers: any,
   ) {
-    const transporter = nodemailer.createTransport({
-      auth: {
-        pass: process.env.CLIENT_GMAIL_SECRET,
-        user: "atlas.people.1@gmail.com",
-      },
-      service: "gmail",
-    });
+    const transporter = nodemailer.createTransport(ses({
+      accessKeyId: "AKIAIUXM6T7JECPWZUSQ",
+      region: "us-west-2",
+      secretAccessKey: process.env.CLIENT_GMAIL_SECRET,
+    } as any));
     const mailOptions = {
       from: "atlas.people.1@gmail.com",
       html: `
@@ -93,7 +92,7 @@ export class ReportGenerator {
       subject: `AtlasP Text Report - ${new Date().toLocaleDateString()} (${
         process.env.NODE_ENV
       })`,
-      to: "luke.walquist@gmail.com, kadhirvelm@gmail.com",
+      to: "kadhirvelm@gmail.com",
     };
     transporter.sendMail(mailOptions, (err, info) => {
       if (err) {
