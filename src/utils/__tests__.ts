@@ -1,0 +1,1 @@
+export const DEFAULT_MONGOID = "100000000000";

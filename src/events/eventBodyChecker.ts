@@ -8,7 +8,10 @@ import {
   isValidMongoIDArray,
 } from "../utils";
 
-function userIdIsInAttendees(attendees: string[], userId: mongo.ObjectId) {
+function userIdIsInAttendees(attendees: string[] | undefined, userId: mongo.ObjectId) {
+  if (attendees === undefined) {
+    return false;
+  }
   return attendees
     .map((attendee: string) => userId.equals(attendee))
     .includes(true);
@@ -17,7 +20,7 @@ function userIdIsInAttendees(attendees: string[], userId: mongo.ObjectId) {
 export function isValidEvent(body: any, userId: mongo.ObjectId) {
   const errorMessages = [];
   if (!isValidDate(body.date)) {
-    errorMessages.push(`Date is not parseable: ${body.date}`);
+    errorMessages.push(`Date is not valid: ${body.date}`);
   }
   if (!isString(body.description)) {
     errorMessages.push(`Description is not valid: ${body.description}`);

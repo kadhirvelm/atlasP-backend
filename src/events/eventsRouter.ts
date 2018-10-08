@@ -101,6 +101,9 @@ class PureEventsRouter extends PureRouter {
     req: IAuthenticatedRequest,
     res: express.Response,
   ) => {
+    if (req.body.password !== process.env.NODE_SECRET) {
+      return sendError(res, ["Something went wrong."]);
+    }
     const payload = await this.events.reindexAllEvents();
     return res.json({
       message: "Attempted full reindex of all events and users",
