@@ -52,14 +52,14 @@ export class ReportGenerator {
           $in: [
             ...eventsInTwoDays.map(this.extractUsers),
             ...eventsMadeInLast24Hours.map(this.extractUsers),
-          ].reduce((a, b) => [...a, ...b]),
+          ].reduce((a, b) => [...a, ...b], []),
         },
       })
       .toArray();
     const sanitizedUsers = allUsers
       .map(fullSanitizeUser)
       .map((user) => ({ [user._id.toHexString()]: user }))
-      .reduce((a, b) => ({ ...a, ...b }));
+      .reduce((a, b) => ({ ...a, ...b }), []);
 
     this.sendEmail(eventsInTwoDays, eventsMadeInLast24Hours, sanitizedUsers);
   }
