@@ -21,7 +21,6 @@ export class ReportGenerator {
       "Asia/Singapore",
     );
     report.start();
-    this.createReport();
   }
 
   private async createReport() {

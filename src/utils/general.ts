@@ -23,7 +23,7 @@ export function sanitizePhoneNumber(phoneNumber: string | undefined) {
   if (phoneNumber === undefined) {
     return null;
   }
-  return phoneNumber.slice().replace(/!\d+/g, "");
+  return phoneNumber.slice().replace(/[^0-9,\+]/g, "");
 }
 
 export function sanitizeUser(
