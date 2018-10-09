@@ -1,4 +1,5 @@
 import express from "express";
+import { PhoneNumberUtil } from "google-libphonenumber";
 import mongo from "mongodb";
 
 import { IFullUser } from "../users";
@@ -22,7 +23,7 @@ export function sanitizePhoneNumber(phoneNumber: string | undefined) {
   if (phoneNumber === undefined) {
     return null;
   }
-  return phoneNumber.slice().replace(/![0-9]/g, "");
+  return phoneNumber.slice().replace(/!\d+/g, "");
 }
 
 export function sanitizeUser(
