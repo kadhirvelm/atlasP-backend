@@ -21,7 +21,6 @@ export class ReportGenerator {
       "Asia/Singapore",
     );
     report.start();
-    this.createReport();
   }
 
   private async createReport() {
@@ -69,11 +68,13 @@ export class ReportGenerator {
     eventsMadeInLast24Hours: any[],
     sanitizedUsers: any,
   ) {
-    const transporter = nodemailer.createTransport(ses({
-      accessKeyId: "AKIAIUXM6T7JECPWZUSQ",
-      region: "us-west-2",
-      secretAccessKey: process.env.CLIENT_GMAIL_SECRET,
-    } as any));
+    const transporter = nodemailer.createTransport(
+      ses({
+        accessKeyId: "AKIAIUXM6T7JECPWZUSQ",
+        region: "us-west-2",
+        secretAccessKey: process.env.CLIENT_GMAIL_SECRET,
+      } as any),
+    );
     const mailOptions = {
       from: "atlas.people.1@gmail.com",
       html: `
@@ -124,9 +125,7 @@ export class ReportGenerator {
         `;
   }
 
-  private renderSingleAttendee = (user: string, sanitizedUsers: any) => `${sanitizedUsers[user].name}, +1${
-    sanitizedUsers[user].phoneNumber
-  }`
+  private renderSingleAttendee = (user: string, sanitizedUsers: any) => `${sanitizedUsers[user].name}, +1${sanitizedUsers[user].phoneNumber}`;
 
   private extractUsers = (event: any) => [
     this.convertToMongoId(event.host),
