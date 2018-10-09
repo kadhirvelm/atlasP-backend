@@ -1,5 +1,4 @@
 import express from "express";
-import { PhoneNumberUtil } from "google-libphonenumber";
 import mongo from "mongodb";
 
 import { IFullUser } from "../users";
