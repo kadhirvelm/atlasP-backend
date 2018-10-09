@@ -9,9 +9,9 @@ const phoneUtils = new PhoneNumberUtil();
 
 export function isValidPhoneNumber(rawNumber: string) {
   try {
-      return phoneUtils.isValidNumber(phoneUtils.parse(rawNumber, "US"));
+    return phoneUtils.isValidNumber(phoneUtils.parse(rawNumber, "US"));
   } catch (e) {
-      return false;
+    return false;
   }
 }
 
