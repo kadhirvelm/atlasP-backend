@@ -59,8 +59,10 @@ class PureEventsRouter extends PureRouter {
     if (errorMessages.length > 0) {
       return sendError(res, errorMessages);
     }
+    const eventId = req.body.eventId;
+    delete req.body.eventId;
     const payload = await this.events.updateEvent(
-      new mongo.ObjectId(req.body.eventId),
+      new mongo.ObjectId(eventId),
       req.body as IRawEvent,
     );
     return res.json({
@@ -112,4 +114,4 @@ class PureEventsRouter extends PureRouter {
   }
 }
 
-export const EventRouters = (db: mongo.Db) => new PureEventsRouter(db).router;
+export const EventRouters = (db: mongo.Db): express.Router => new PureEventsRouter(db).router;

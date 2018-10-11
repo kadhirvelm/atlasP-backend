@@ -1,11 +1,9 @@
-import { assert, config } from "chai";
+import { assert } from "chai";
 import "mocha";
 import mongo from "mongodb";
 
 import { DEFAULT_MONGOID } from "../../utils/__tests__";
 import { isValidEvent } from "../eventBodyChecker";
-
-config.showDiff = true;
 
 describe("Event body checker", () => {
     it ("should return default body errors", () => {
