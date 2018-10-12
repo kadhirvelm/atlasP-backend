@@ -1,7 +1,6 @@
 import mongo from "mongodb";
 
 export interface IUser {
-  age: number;
   gender: "M" | "F" | "X";
   location: string;
   name: string;
@@ -20,7 +19,6 @@ export interface IFullUser extends IUser {
 }
 export const validGenders = ["m", "f", "x"];
 export const validUserKeys = [
-  "age",
   "gender",
   "location",
   "name",

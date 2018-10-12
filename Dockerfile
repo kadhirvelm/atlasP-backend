@@ -7,6 +7,8 @@ RUN touch ./.google_tokens
 COPY package.json ./
 COPY yarn.lock ./
 
+RUN yarn remove mongodb-memory-server
+
 RUN yarn
 
 COPY . .

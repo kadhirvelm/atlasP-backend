@@ -60,7 +60,6 @@ export class MongoMock {
       const userIDs = [];
       for (const name of users) {
         const response = await this.sendRequest(IRequestTypes.POST, "/users/new", {
-          age: 0,
           gender: "X",
           location: "Node",
           name,
