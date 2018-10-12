@@ -2,7 +2,7 @@ import { assert } from "chai";
 import "mocha";
 import mongo from "mongodb";
 
-import { DEFAULT_MONGOID } from "../../utils/__tests__";
+import { DEFAULT_MONGOID } from "../../utils/__tests__/usersUtils";
 import { isValidEvent } from "../eventBodyChecker";
 
 describe("Event body checker", () => {

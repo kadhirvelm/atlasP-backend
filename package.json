@@ -27,7 +27,25 @@
     "lint": "eslint src --ext ts && tslint src/**/*",
     "lint:fix": "prettier src/**/* --write && eslint src --ext ts --fix && tslint src/**/* --fix",
     "test": "mocha -r ts-node/register src/**/__tests__/*.spec.ts",
+    "test:coverage": "nyc mocha -r ts-node/register -r source-map-support/register --recursive src/**/__tests__/*.spec.ts",
     "test:watch": "mocha -r ts-node/register --watch-extensions spec.ts,ts src/**/__tests__/*.spec.ts --watch"
+  },
+  "nyc": {
+    "extension": [
+      ".ts"
+    ],
+    "include": [
+      "src/**/*"
+    ],
+    "exclude": [
+      "**/*.d.ts",
+      "**/*.spec.ts",
+      "*.js"
+    ],
+    "reporter": [
+      "html"
+    ],
+    "all": true
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.1",
@@ -51,7 +69,9 @@
     "mocha": "^5.2.0",
     "mongodb-memory-server": "^2.4.3",
     "nodemon": "^1.18.3",
+    "nyc": "^13.0.1",
     "prettier": "1.14.2",
+    "source-map-support": "^0.5.9",
     "supertest": "^3.3.0",
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",

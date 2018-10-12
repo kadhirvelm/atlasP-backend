@@ -1,65 +1,42 @@
 import { assert, expect } from "chai";
-import express from "express";
 import "mocha";
 import mongo from "mongodb";
-import MongodbMemoryServer, { MongoMemoryServer } from "mongodb-memory-server";
-import request from "supertest";
 
-import { PureApp } from "../../App";
 import { generateAuthenticationToken } from "../../utils";
-import { createUsers, DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2, MONGO_ID_3, MONGO_ID_4, MONGO_ID_5 } from "../../utils/__tests__";
-
-let mongodb: MongoMemoryServer;
-let application: PureApp;
-let authenticationToken: string;
-
-function timeout(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { compareEvents } from "../../utils/__tests__/eventsUtils";
+import { IRequestTypes, MongoMock } from "../../utils/__tests__/generalUtils";
+import { DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2, MONGO_ID_3, MONGO_ID_4, MONGO_ID_5 } from "../../utils/__tests__/usersUtils";
 
 describe("Events", () => {
+    let mongoMock: MongoMock;
+
     before(async () => {
-        mongodb = new MongodbMemoryServer();
-        const mongoURL = await mongodb.getConnectionString();
-        application = new PureApp(mongoURL);
-        /** HACKHACK: let's the database mount before executing the tests. */
-        await timeout(200);
-        authenticationToken = generateAuthenticationToken(new mongo.ObjectId(DEFAULT_MONGOID));
+        mongoMock = new MongoMock();
+        await mongoMock.mountDatabase();
+        mongoMock.setAuthenticationToken(generateAuthenticationToken(new mongo.ObjectId(DEFAULT_MONGOID)));
     });
 
     after(async () => {
-        await mongodb.stop();
+        await mongoMock.close();
     });
 
     it("successfully creates an event", async () => {
-        const createEventResponse = await request(application.app)
-            .post("/events/new")
-            .set("access-token", authenticationToken)
-            .send({
-                attendees: [ DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2],
-                date: "01/01/2018 10:00 AM",
-                description: "Test event",
-                host: DEFAULT_MONGOID,
-            });
-        const eventId = createEventResponse.body.payload.id;
-        expect(eventId).to.not.equal(undefined);
+        const createEventResponse = await mongoMock.sendRequest(IRequestTypes.POST, "/events/new", {
+            attendees: [ DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2],
+            date: "01/01/2018 10:00 AM",
+            description: "Test event",
+            host: DEFAULT_MONGOID,
+        });
         assert.deepEqual(createEventResponse.body.payload.newEvent, { n: 1, ok: 1 });
+        const eventId = createEventResponse.body.payload.id;
 
-        const fetchEventResponse = await request(application.app)
-            .post("/events/getOne")
-            .set("access-token", authenticationToken)
-            .send({
-                eventId,
-            });
-        expect(fetchEventResponse.body.payload._id).to.not.equal(undefined);
-        delete fetchEventResponse.body.payload._id;
-        assert.deepEqual(fetchEventResponse.body.payload, {
+        const fetchEventResponse = await mongoMock.sendRequest(IRequestTypes.POST, "/events/getOne", { eventId });
+        compareEvents(fetchEventResponse.body.payload, {
             attendees: [
-                  "303030303030303030303030",
-                  "313030303030303030303030",
-                  "323030303030303030303030",
+                    "303030303030303030303030",
+                    "313030303030303030303030",
+                    "323030303030303030303030",
                 ],
-            date: "2018-01-01T18:00:00.000Z",
             description: "Test event",
             host: "303030303030303030303030",
         });
@@ -67,10 +44,7 @@ describe("Events", () => {
 
     describe("update events", () => {
         it("successfully updates an event with the same users", async () => {
-            const createEventResponse = await request(application.app)
-            .post("/events/new")
-            .set("access-token", authenticationToken)
-            .send({
+            const createEventResponse = await mongoMock.sendRequest(IRequestTypes.POST, "/events/new", {
                 attendees: [ DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2],
                 date: "01/01/2018 10:00 AM",
                 description: "Test event 1",
@@ -79,10 +53,7 @@ describe("Events", () => {
             const eventId = createEventResponse.body.payload.id;
             expect(eventId).to.not.equal(undefined);
 
-            const secondUpdate = await request(application.app)
-            .put("/events/update")
-            .set("access-token", authenticationToken)
-            .send({
+            const secondUpdate = await mongoMock.sendRequest(IRequestTypes.PUT, "/events/update", {
                 attendees: [ DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2],
                 date: "01/05/2018 11:00 AM",
                 description: "New event description",
@@ -91,30 +62,22 @@ describe("Events", () => {
             });
             assert.deepEqual(secondUpdate.body.payload, { n: 1, nModified: 1, ok: 1 });
 
-            const fetchEventResponse = await request(application.app)
-            .post("/events/getOne")
-            .set("access-token", authenticationToken)
-            .send({
+            const fetchEventResponse = await mongoMock.sendRequest(IRequestTypes.POST, "/events/getOne", {
                 eventId,
             });
-            delete fetchEventResponse.body.payload._id;
-            assert.deepEqual(fetchEventResponse.body.payload, {
+            compareEvents(fetchEventResponse.body.payload, {
                 attendees: [
                     "303030303030303030303030",
                     "313030303030303030303030",
                     "323030303030303030303030",
                     ],
-                date: "2018-01-05T19:00:00.000Z",
                 description: "New event description",
                 host: "303030303030303030303030",
             });
         });
 
         it("successfully updates an event with different users", async () => {
-            const createEventResponse = await request(application.app)
-            .post("/events/new")
-            .set("access-token", authenticationToken)
-            .send({
+            const createEventResponse = await mongoMock.sendRequest(IRequestTypes.POST, "/events/new", {
                 attendees: [ DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2],
                 date: "01/01/2018 10:00 AM",
                 description: "Test event 1",
@@ -123,10 +86,7 @@ describe("Events", () => {
             const eventId = createEventResponse.body.payload.id;
             expect(eventId).to.not.equal(undefined);
 
-            const secondUpdate = await request(application.app)
-            .put("/events/update")
-            .set("access-token", authenticationToken)
-            .send({
+            const secondUpdate = await mongoMock.sendRequest(IRequestTypes.PUT, "/events/update", {
                 attendees: [ DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_3, MONGO_ID_4, MONGO_ID_5],
                 date: "01/05/2018 11:00 AM",
                 description: "New event description",
@@ -135,14 +95,10 @@ describe("Events", () => {
             });
             assert.deepEqual(secondUpdate.body.payload, { n: 1, nModified: 1, ok: 1 });
 
-            const fetchEventResponse = await request(application.app)
-            .post("/events/getOne")
-            .set("access-token", authenticationToken)
-            .send({
+            const fetchEventResponse = await mongoMock.sendRequest(IRequestTypes.POST, "/events/getOne", {
                 eventId,
             });
-            delete fetchEventResponse.body.payload._id;
-            assert.deepEqual(fetchEventResponse.body.payload, {
+            compareEvents(fetchEventResponse.body.payload, {
                 attendees: [
                     "303030303030303030303030",
                     "313030303030303030303030",
@@ -150,7 +106,6 @@ describe("Events", () => {
                     "343030303030303030303030",
                     "353030303030303030303030",
                     ],
-                date: "2018-01-05T19:00:00.000Z",
                 description: "New event description",
                 host: "303030303030303030303030",
             });
@@ -159,22 +114,18 @@ describe("Events", () => {
 
     describe("Events with real users", () => {
         let userIDs: string[] = [];
-        let newAuthToken: string;
         const eventIds: string[] = [];
 
         before((done) => {
             setTimeout(async () => {
-                userIDs = await createUsers(application.app, DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2, MONGO_ID_3, MONGO_ID_4, MONGO_ID_5);
-                newAuthToken = generateAuthenticationToken(new mongo.ObjectId(userIDs[0]));
+                userIDs = await mongoMock.createUsers(DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2, MONGO_ID_3, MONGO_ID_4, MONGO_ID_5);
+                mongoMock.setAuthenticationToken(generateAuthenticationToken(new mongo.ObjectId(userIDs[0])));
                 done();
-            }, 400);
+            }, 100);
         });
 
         it("correctly indexes events", async () => {
-            const createEventResponse = await request(application.app)
-            .post("/events/new")
-            .set("access-token", newAuthToken)
-            .send({
+            const createEventResponse = await mongoMock.sendRequest(IRequestTypes.POST, "/events/new", {
                 attendees: userIDs.slice(1, 3),
                 date: "01/01/2018 10:00 AM",
                 description: "First event",
@@ -185,10 +136,7 @@ describe("Events", () => {
             eventIds.push(firstEventId);
             expect(firstEventId).to.not.equal(undefined);
 
-            const getUserRequest = await request(application.app)
-            .post("/users/getOne")
-            .set("access-token", newAuthToken)
-            .send({
+            const getUserRequest = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
                 id: userIDs[0],
             });
             assert.deepEqual(getUserRequest.body.payload[0].connections, {
@@ -197,10 +145,7 @@ describe("Events", () => {
                 [userIDs[2]]: [firstEventId],
             });
 
-            const createSecondEvent = await request(application.app)
-            .post("/events/new")
-            .set("access-token", newAuthToken)
-            .send({
+            const createSecondEvent = await mongoMock.sendRequest(IRequestTypes.POST, "/events/new", {
                 attendees: userIDs.slice(2),
                 date: "01/05/2018 10:00 AM",
                 description: "Second event",
@@ -211,10 +156,7 @@ describe("Events", () => {
             eventIds.push(secondEventId);
             expect(secondEventId).to.not.equal(undefined);
 
-            const getSecondUserRequest = await request(application.app)
-            .post("/users/getOne")
-            .set("access-token", newAuthToken)
-            .send({
+            const getSecondUserRequest = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
                 id: userIDs[0],
             });
             assert.deepEqual(getSecondUserRequest.body.payload[0].connections, {
@@ -226,12 +168,9 @@ describe("Events", () => {
                 [userIDs[5]]: [secondEventId],
             });
 
-            const getUserFiveRequest = await request(application.app)
-            .post("/users/getOne")
-            .set("access-token", generateAuthenticationToken(new mongo.ObjectId(userIDs[5])))
-            .send({
+            const getUserFiveRequest = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
                 id: userIDs[5],
-            });
+            }, generateAuthenticationToken(new mongo.ObjectId(userIDs[5])));
             assert.deepEqual(getUserFiveRequest.body.payload[0].connections, {
                 [userIDs[5]]: [secondEventId],
                 [userIDs[4]]: [secondEventId],
@@ -242,10 +181,7 @@ describe("Events", () => {
         });
 
         it("correctly reindexes events with the same users", async () => {
-            const createEventResponse = await request(application.app)
-            .post("/events/new")
-            .set("access-token", newAuthToken)
-            .send({
+            const createEventResponse = await mongoMock.sendRequest(IRequestTypes.POST, "/events/new", {
                 attendees: userIDs,
                 date: "01/10/2018 10:00 AM",
                 description: "Third event",
@@ -256,10 +192,7 @@ describe("Events", () => {
             eventIds.push(thirdEvent);
             expect(thirdEvent).to.not.equal(undefined);
 
-            const firstGetUsers = await request(application.app)
-            .post("/users/getOne")
-            .set("access-token", newAuthToken)
-            .send({
+            const firstGetUsers = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
                 id: userIDs[0],
             });
             assert.deepEqual(firstGetUsers.body.payload[0].connections, {
@@ -271,10 +204,7 @@ describe("Events", () => {
                 [userIDs[5]]: [eventIds[1], eventIds[2]],
             });
 
-            const updateRequest = await request(application.app)
-            .put("/events/update")
-            .set("access-token", newAuthToken)
-            .send({
+            const updateRequest = await mongoMock.sendRequest(IRequestTypes.PUT, "/events/update", {
                 attendees: userIDs,
                 date: "01/12/2018 11:00 AM",
                 description: "New third event description",
@@ -283,10 +213,7 @@ describe("Events", () => {
             });
             assert.deepEqual(updateRequest.body.payload, { n: 1, nModified: 1, ok: 1 });
 
-            const secondGetUsers = await request(application.app)
-            .post("/users/getOne")
-            .set("access-token", newAuthToken)
-            .send({
+            const secondGetUsers = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
                 id: userIDs[0],
             });
             assert.deepEqual(secondGetUsers.body.payload[0].connections, {
@@ -300,10 +227,7 @@ describe("Events", () => {
         });
 
         it("correctly reindexes events with different users", async () => {
-            const createEventResponse = await request(application.app)
-            .post("/events/new")
-            .set("access-token", newAuthToken)
-            .send({
+            const createEventResponse = await mongoMock.sendRequest(IRequestTypes.POST, "/events/new", {
                 attendees: userIDs,
                 date: "01/10/2018 10:00 AM",
                 description: "Third event",
@@ -314,10 +238,7 @@ describe("Events", () => {
             eventIds.push(fourthEvent);
             expect(fourthEvent).to.not.equal(undefined);
 
-            const firstGetUsers = await request(application.app)
-            .post("/users/getOne")
-            .set("access-token", newAuthToken)
-            .send({
+            const firstGetUsers = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
                 id: userIDs[0],
             });
             assert.deepEqual(firstGetUsers.body.payload[0].connections, {
@@ -329,10 +250,7 @@ describe("Events", () => {
                 [userIDs[5]]: [eventIds[1], eventIds[2], eventIds[3]],
             });
 
-            const updateRequest = await request(application.app)
-            .put("/events/update")
-            .set("access-token", newAuthToken)
-            .send({
+            const updateRequest = await mongoMock.sendRequest(IRequestTypes.PUT, "/events/update", {
                 attendees: userIDs.slice(0, 3),
                 date: "01/12/2018 11:00 AM",
                 description: "New third event description",
@@ -341,10 +259,7 @@ describe("Events", () => {
             });
             assert.deepEqual(updateRequest.body.payload, { n: 1, nModified: 1, ok: 1 });
 
-            const secondGetUsers = await request(application.app)
-            .post("/users/getOne")
-            .set("access-token", newAuthToken)
-            .send({
+            const secondGetUsers = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
                 id: userIDs[0],
             });
             assert.deepEqual(secondGetUsers.body.payload[0].connections, {
@@ -356,12 +271,9 @@ describe("Events", () => {
                 [userIDs[5]]: [eventIds[1], eventIds[2]],
             });
 
-            const getUserFiveRequest = await request(application.app)
-            .post("/users/getOne")
-            .set("access-token", generateAuthenticationToken(new mongo.ObjectId(userIDs[5])))
-            .send({
+            const getUserFiveRequest = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
                 id: userIDs[5],
-            });
+            }, generateAuthenticationToken(new mongo.ObjectId(userIDs[5])));
             assert.deepEqual(getUserFiveRequest.body.payload[0].connections, {
                 [userIDs[5]]: [eventIds[1], eventIds[2]],
                 [userIDs[4]]: [eventIds[1], eventIds[2]],
