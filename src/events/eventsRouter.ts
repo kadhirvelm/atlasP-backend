@@ -59,8 +59,10 @@ class PureEventsRouter extends PureRouter {
     if (errorMessages.length > 0) {
       return sendError(res, errorMessages);
     }
+    const { eventId } = req.body;
+    delete req.body.eventId;
     const payload = await this.events.updateEvent(
-      new mongo.ObjectId(req.body.eventId),
+      new mongo.ObjectId(eventId),
       req.body as IRawEvent,
     );
     return res.json({
@@ -101,6 +103,9 @@ class PureEventsRouter extends PureRouter {
     req: IAuthenticatedRequest,
     res: express.Response,
   ) => {
+    if (req.body.password !== process.env.NODE_SECRET) {
+      return sendError(res, ["Something went wrong."]);
+    }
     const payload = await this.events.reindexAllEvents();
     return res.json({
       message: "Attempted full reindex of all events and users",
@@ -109,4 +114,4 @@ class PureEventsRouter extends PureRouter {
   }
 }
 
-export const EventRouters = (db: mongo.Db) => new PureEventsRouter(db).router;
+export const EventRouters = (db: mongo.Db): express.Router => new PureEventsRouter(db).router;

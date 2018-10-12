@@ -218,12 +218,10 @@ export class UserDatabase {
       return copyUserConnections;
     }
     removeIds.forEach((id) => {
-      let currentConnections = copyUserConnections[id.toHexString()] || [];
-      if (currentConnections.includes(eventId)) {
-        currentConnections = currentConnections.splice(
-          currentConnections.indexOf(eventId),
-          1,
-        );
+      const currentConnections = copyUserConnections[id.toHexString()] || [];
+      const connectionIndex = currentConnections.findIndex((connection) => connection.equals(eventId));
+      if (connectionIndex !== -1) {
+        currentConnections.splice(connectionIndex, 1);
       }
     });
     return copyUserConnections;

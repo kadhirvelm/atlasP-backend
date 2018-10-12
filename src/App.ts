@@ -2,19 +2,18 @@ import bodyParser from "body-parser";
 import express from "express";
 import mongo from "mongodb";
 
-import { MONGO_URL } from "./config";
 import { EventRouters, EVENTS_ROOT } from "./events/eventsRouter";
 import { GENERAL_ROOT, GeneralRoutes } from "./general/generalRouter";
 import { GOOGLE_ROOT, GoogleRoutes } from "./google/googleRouter";
 import { ReportGenerator } from "./reports/reportGenerator";
 import { USERS_ROOT, UsersRoutes } from "./users/userRouter";
 
-class PureApp {
+export class PureApp {
     public app: express.Express;
 
     public database: mongo.Db;
 
-    constructor() {
+    constructor(mongoUrl: string) {
       this.app = express();
       this.app.use(bodyParser.json({ strict: true }));
       this.app.use((req, res, next) => {
@@ -27,11 +26,11 @@ class PureApp {
         next();
       });
 
-      this.mountDatabase();
+      this.mountDatabase(mongoUrl);
     }
 
-    private async mountDatabase() {
-      const client = await mongo.MongoClient.connect(MONGO_URL, { useNewUrlParser: true });
+    private async mountDatabase(mongoUrl: string) {
+      const client = await mongo.MongoClient.connect(mongoUrl, { useNewUrlParser: true });
       this.database = client.db("atlasp");
       this.mountRoutes();
       this.reportGenerator();
@@ -50,4 +49,4 @@ class PureApp {
     }
 }
 
-export const App = new PureApp().app;
+export const App = (mongoUrl: string) => new PureApp(mongoUrl).app;
