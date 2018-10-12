@@ -8,7 +8,10 @@ import {
   isValidMongoIDArray,
 } from "../utils";
 
-function userIdIsInAttendees(attendees: string[] | undefined, userId: mongo.ObjectId) {
+function userIdIsInAttendees(
+  attendees: string[] | undefined,
+  userId: mongo.ObjectId,
+) {
   if (attendees === undefined) {
     return false;
   }

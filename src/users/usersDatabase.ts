@@ -221,10 +221,7 @@ export class UserDatabase {
       const currentConnections = copyUserConnections[id.toHexString()] || [];
       const connectionIndex = currentConnections.findIndex((connection) => connection.equals(eventId));
       if (connectionIndex !== -1) {
-        currentConnections.splice(
-          connectionIndex,
-          1,
-        );
+        currentConnections.splice(connectionIndex, 1);
       }
     });
     return copyUserConnections;

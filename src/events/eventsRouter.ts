@@ -59,7 +59,7 @@ class PureEventsRouter extends PureRouter {
     if (errorMessages.length > 0) {
       return sendError(res, errorMessages);
     }
-    const eventId = req.body.eventId;
+    const { eventId } = req.body;
     delete req.body.eventId;
     const payload = await this.events.updateEvent(
       new mongo.ObjectId(eventId),
