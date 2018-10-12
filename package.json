@@ -26,8 +26,8 @@
     "server": "tsc && node dist",
     "lint": "eslint src --ext ts && tslint src/**/*",
     "lint:fix": "prettier src/**/* --write && eslint src --ext ts --fix && tslint src/**/* --fix",
-    "test": "mocha -r ts-node/register src/**/__tests__/*.spec.ts",
-    "test:coverage": "nyc mocha -r ts-node/register -r source-map-support/register --recursive src/**/__tests__/*.spec.ts",
+    "test": "mocha -r ts-node/register src/**/__tests__/*.spec.ts --exit",
+    "test:coverage": "nyc mocha -r ts-node/register -r source-map-support/register --recursive src/**/__tests__/*.spec.ts --exit",
     "test:watch": "mocha -r ts-node/register --watch-extensions spec.ts,ts src/**/__tests__/*.spec.ts --watch"
   },
   "nyc": {
