@@ -1,14 +1,18 @@
+import { PhoneNumberUtil } from "google-libphonenumber";
 import mongo from "mongodb";
 
 export function isString(item: any): item is string {
   return typeof item === "string";
 }
 
-export function isValidPhoneNumber(item: any) {
-  return (
-    isString(item)
-    && item.match(/^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$/)
-  );
+const phoneUtils = new PhoneNumberUtil();
+
+export function isValidPhoneNumber(rawNumber: string) {
+  try {
+    return phoneUtils.isValidNumber(phoneUtils.parse(rawNumber, "US"));
+  } catch (e) {
+    return false;
+  }
 }
 
 export function isNumber(item: any): item is number {
