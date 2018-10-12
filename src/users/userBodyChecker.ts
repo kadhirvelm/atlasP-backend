@@ -25,9 +25,6 @@ function hasCorrectKeys(body: any, checkForKeys: string[]) {
 
 export function validUserBodyChecker(body: any) {
   const errorMessages = [];
-  if (!isNumber(body.age)) {
-    errorMessages.push(`Age is not a number: ${body.age}`);
-  }
   if (!isSpecificString(body.gender, validGenders)) {
     errorMessages.push(`Gender is not M, F, or X: ${body.gender}`);
   }

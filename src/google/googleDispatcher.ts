@@ -143,7 +143,6 @@ export class GoogleDispatcher {
   }
 
   private formatUser = (userRaw: any[]): IUser => ({
-    age: userRaw[3],
     gender: userRaw[2],
     location: userRaw[4],
     name: userRaw[1],
