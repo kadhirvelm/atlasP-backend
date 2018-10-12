@@ -23,6 +23,7 @@ export class PureApp {
           res.header("Access-Control-Allow-Origin", "http://www.atlas-people.com");
         }
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, access-token");
+        res.header("Access-Control-Allow-Methods", "DELETE, GET, POST, PUT");
         next();
       });
 
