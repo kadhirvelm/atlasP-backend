@@ -53,3 +53,7 @@ export function parseIntoObjectIDs(ids: string[]): mongo.ObjectId[] {
 export function isAdminUser(id: mongo.ObjectId) {
   return ADMINS.includes(id.toHexString());
 }
+
+export function flatten(previous: any[], next: any[]) {
+  return previous.concat(next);
+}
