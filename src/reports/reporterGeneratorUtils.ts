@@ -102,8 +102,8 @@ export async function getAllInactiveUsers(database: mongo.Db) {
         (event) => event._id.toString() === finalUserEventID.toString(),
       );
       const daysSinceLastEvent = differenceBetweenDates(
-        new Date(finalEvent.date),
         new Date(),
+        new Date(finalEvent.date),
       );
       if (daysSinceLastEvent > REMIND_ON_INACTIVE_DAY_COUNT) {
         return `${user.name},${daysSinceLastEvent} days,+1${user.phoneNumber}`;
