@@ -5,7 +5,7 @@ import mongo from "mongodb";
 import { EventRouters, EVENTS_ROOT } from "./events/eventsRouter";
 import { GENERAL_ROOT, GeneralRoutes } from "./general/generalRouter";
 import { GOOGLE_ROOT, GoogleRoutes } from "./google/googleRouter";
-import { ReportGenerator } from "./reports/reportGenerator";
+import { REPORT_ROOT, ReporterRoutes } from "./reports/reporter";
 import { USERS_ROOT, UsersRoutes } from "./users/userRouter";
 
 export class PureApp {
@@ -34,7 +34,6 @@ export class PureApp {
       const client = await mongo.MongoClient.connect(mongoUrl, { useNewUrlParser: true });
       this.database = client.db("atlasp");
       this.mountRoutes();
-      this.reportGenerator();
     }
 
     private mountRoutes() {
@@ -42,11 +41,7 @@ export class PureApp {
       this.app.use(EVENTS_ROOT, EventRouters(this.database));
       this.app.use(USERS_ROOT, UsersRoutes(this.database));
       this.app.use(GOOGLE_ROOT, GoogleRoutes(this.database));
-    }
-
-    private reportGenerator() {
-      const generator = new ReportGenerator(this.database);
-      generator.watchForSendingReport();
+      this.app.use(REPORT_ROOT, ReporterRoutes(this.database));
     }
 }
 
