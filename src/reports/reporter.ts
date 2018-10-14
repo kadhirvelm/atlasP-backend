@@ -5,9 +5,17 @@ import nodemailer from "nodemailer";
 import ses from "nodemailer-ses-transport";
 
 import { PureRouter } from "../general";
-import { createEventsMailBody, createMailSubject, createPeopleMailBody, getAllInactiveUsers, getAllUsers, getEventsHappeningIn24Hours, getEventsHappeningInTwoDays } from "./reporterGeneratorUtils";
+import {
+  createEventsMailBody,
+  createMailSubject,
+  createPeopleMailBody,
+  getAllInactiveUsers,
+  getAllUsers,
+  getEventsHappeningIn24Hours,
+  getEventsHappeningInTwoDays,
+} from "./reporterGeneratorUtils";
 
-const REPORT_RECIPIENTS = [ "luke.walquist@gmail.com", "kadhirvelm@gmail.com" ];
+const REPORT_RECIPIENTS = ["luke.walquist@gmail.com", "kadhirvelm@gmail.com"];
 
 export const REPORT_ROOT = "/reports";
 
@@ -19,7 +27,13 @@ class PureReporter extends PureRouter {
   }
 
   public async initiateCronJobReporting() {
-    const report = new CronJob("0 6 * * *", this.createReport, null, false, "Asia/Singapore");
+    const report = new CronJob(
+      "0 6 * * *",
+      this.createReport,
+      null,
+      false,
+      "Asia/Singapore",
+    );
     report.start();
   }
 
@@ -31,7 +45,10 @@ class PureReporter extends PureRouter {
    * Public routes
    */
 
-  private sendOutReport = async (req: express.Request, res: express.Response) => {
+  private sendOutReport = async (
+    req: express.Request,
+    res: express.Response,
+  ) => {
     await this.createReport();
     return res.json({
       message: "Sent report to recipients.",
@@ -43,10 +60,20 @@ class PureReporter extends PureRouter {
    */
 
   private async createReport() {
-    const eventsMadeInLast24Hours = await getEventsHappeningIn24Hours(this.database);
+    const eventsMadeInLast24Hours = await getEventsHappeningIn24Hours(
+      this.database,
+    );
     const eventsInTwoDays = await getEventsHappeningInTwoDays(this.database);
-    const allUsers = await getAllUsers(this.database, eventsInTwoDays, eventsMadeInLast24Hours);
-    const mailEventBody = createEventsMailBody(eventsMadeInLast24Hours, eventsInTwoDays, allUsers);
+    const allUsers = await getAllUsers(
+      this.database,
+      eventsInTwoDays,
+      eventsMadeInLast24Hours,
+    );
+    const mailEventBody = createEventsMailBody(
+      eventsMadeInLast24Hours,
+      eventsInTwoDays,
+      allUsers,
+    );
 
     const allInactiveUsers = await getAllInactiveUsers(this.database);
     const mailPeopleBody = createPeopleMailBody(allInactiveUsers);
@@ -54,7 +81,7 @@ class PureReporter extends PureRouter {
     this.sendEmail(`<div>${mailEventBody}${mailPeopleBody}</div>`);
   }
 
-  private sendEmail(mailBody: string) {
+  private sendEmail = (mailBody: string) => {
     const transporter = nodemailer.createTransport(
       ses({
         accessKeyId: "AKIAIUXM6T7JECPWZUSQ",
