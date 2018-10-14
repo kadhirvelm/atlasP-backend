@@ -17,7 +17,7 @@ function getRawUsers(database: mongo.Db, ...events: IEvent[][]) {
     .collection(USERS_COLLECTION)
     .find({
       _id: {
-        $in: events.reduce((a, b) => [...a, ...b], []).map(extractUsers),
+        $in: events.reduce(flatten, []).map(extractUsers).reduce(flatten, []),
       },
     })
     .toArray();
@@ -33,7 +33,7 @@ function differenceBetweenDates(dateA: Date, dateB: Date) {
   return Math.round((dateA.getTime() - dateB.getTime()) / SINGLE_DAY);
 }
 
-const renderSingleAttendee = (user: string, allUsers: any) => `${allUsers[user].name}, +1${allUsers[user].phoneNumber}`;
+const renderSingleAttendee = (userID: string, allUsers: any) => `${allUsers[userID].name}, +1${allUsers[userID].phoneNumber}`;
 
 function createSingleEventString(event: any, allUsers: any) {
   return `
