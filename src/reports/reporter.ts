@@ -26,7 +26,7 @@ class PureReporter extends PureRouter {
     this.mountPublicRoutes();
   }
 
-  public async initiateCronJobReporting() {
+  public initiateCronJobReporting = async () => {
     const report = new CronJob(
       "0 6 * * *",
       this.createReport,
@@ -59,7 +59,7 @@ class PureReporter extends PureRouter {
    * Generator functions
    */
 
-  private async createReport() {
+  private createReport = async () => {
     const eventsMadeInLast24Hours = await getEventsHappeningIn24Hours(
       this.database,
     );
