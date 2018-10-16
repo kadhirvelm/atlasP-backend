@@ -139,7 +139,7 @@ describe("Events", () => {
       });
 
       const createSecondEvent = await mongoMock.sendRequest(IRequestTypes.POST, "/events/new", {
-        attendees: [ userIDs[0], ...userIDs.slice(2)],
+        attendees: [userIDs[0], ...userIDs.slice(2)],
         date: "01/05/2018 10:00 AM",
         description: "Second event",
       });

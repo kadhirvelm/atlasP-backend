@@ -31,7 +31,7 @@ export function isValidEvent(body: any, userId: mongo.ObjectId) {
   if (!userIdIsInAttendees(body.attendees as string[], userId)) {
     errorMessages.push("You're not in the event.");
   }
-  if (body.attendees.length === 1 && body.attendees[0] === userId.toHexString()) {
+  if (body.attendees !== undefined && body.attendees.length === 1 && body.attendees[0] === userId.toHexString()) {
     errorMessages.push("You cannot be in an event by yourself.");
   }
   return errorMessages;
