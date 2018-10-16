@@ -1,27 +1,13 @@
 import { validGenders, validUserKeys } from "./userConstants";
 
 import {
-  differenceBetweenArrays,
+  hasCorrectKeys,
   isNumber,
   isSpecificString,
   isString,
   isValidPhoneNumber,
   isValidStringArray,
 } from "../utils";
-
-function hasValidUserKeys(body: any) {
-  const extraKeys = differenceBetweenArrays(Object.keys(body), validUserKeys);
-  return extraKeys.length > 0 ? [`Contains extra fields: ${extraKeys}`] : [];
-}
-
-function hasCorrectKeys(body: any, checkForKeys: string[]) {
-  const errorMessages = hasValidUserKeys(body);
-  const missingKeys = differenceBetweenArrays(checkForKeys, Object.keys(body));
-  if (missingKeys.length > 0) {
-    errorMessages.push(`Missing fields: ${missingKeys}`);
-  }
-  return errorMessages;
-}
 
 export function validUserBodyChecker(body: any) {
   const errorMessages = [];
@@ -54,7 +40,7 @@ export function isValidUser(body: any) {
 }
 
 export function isValidUserUpdate(body: any) {
-  const errorMessages = hasValidUserKeys(body);
+  const errorMessages = hasCorrectKeys(body, validUserKeys);
   if (!isValidStringArray(Object.values(body))) {
     errorMessages.push("Cannot leave fields blank.");
   }

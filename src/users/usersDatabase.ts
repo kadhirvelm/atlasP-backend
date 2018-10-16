@@ -140,7 +140,7 @@ export class UserDatabase {
     originalEvent: IEvent,
   ) {
     return this.changeUserIndex(
-      [originalEvent.host, ...originalEvent.attendees],
+      originalEvent.attendees,
       eventId,
       this.removeConnection,
     );

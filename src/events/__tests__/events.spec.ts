@@ -6,7 +6,7 @@ import { generateAuthenticationToken } from "../../utils";
 import { compareEvents } from "../../utils/__tests__/eventsUtils";
 import { IRequestTypes, MongoMock } from "../../utils/__tests__/generalUtils";
 import {
-  DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2, MONGO_ID_3, MONGO_ID_4, MONGO_ID_5,
+  convertToMongoObjectId, DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2, MONGO_ID_3, MONGO_ID_4, MONGO_ID_5,
 } from "../../utils/__tests__/usersUtils";
 
 describe("Events", () => {
@@ -24,10 +24,9 @@ describe("Events", () => {
 
   it("successfully creates an event", async () => {
     const createEventResponse = await mongoMock.sendRequest(IRequestTypes.POST, "/events/new", {
-      attendees: [DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2],
+      attendees: [DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2].map(convertToMongoObjectId),
       date: "01/01/2018 10:00 AM",
       description: "Test event",
-      host: DEFAULT_MONGOID,
     });
     assert.deepEqual(createEventResponse.body.payload.newEvent, { n: 1, ok: 1 });
     const eventId = createEventResponse.body.payload.id;
@@ -40,27 +39,24 @@ describe("Events", () => {
         "323030303030303030303030",
       ],
       description: "Test event",
-      host: "303030303030303030303030",
     });
   });
 
   describe("update events", () => {
     it("successfully updates an event with the same users", async () => {
       const createEventResponse = await mongoMock.sendRequest(IRequestTypes.POST, "/events/new", {
-        attendees: [DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2],
+        attendees: [DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2].map(convertToMongoObjectId),
         date: "01/01/2018 10:00 AM",
         description: "Test event 1",
-        host: DEFAULT_MONGOID,
       });
       const eventId = createEventResponse.body.payload.id;
       expect(eventId).to.not.equal(undefined);
 
       const secondUpdate = await mongoMock.sendRequest(IRequestTypes.PUT, "/events/update", {
-        attendees: [DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2],
+        attendees: [DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2].map(convertToMongoObjectId),
         date: "01/05/2018 11:00 AM",
         description: "New event description",
         eventId,
-        host: DEFAULT_MONGOID,
       });
       assert.deepEqual(secondUpdate.body.payload, { n: 1, nModified: 1, ok: 1 });
 
@@ -74,26 +70,23 @@ describe("Events", () => {
           "323030303030303030303030",
         ],
         description: "New event description",
-        host: "303030303030303030303030",
       });
     });
 
     it("successfully updates an event with different users", async () => {
       const createEventResponse = await mongoMock.sendRequest(IRequestTypes.POST, "/events/new", {
-        attendees: [DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2],
+        attendees: [DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2].map(convertToMongoObjectId),
         date: "01/01/2018 10:00 AM",
         description: "Test event 1",
-        host: DEFAULT_MONGOID,
       });
       const eventId = createEventResponse.body.payload.id;
       expect(eventId).to.not.equal(undefined);
 
       const secondUpdate = await mongoMock.sendRequest(IRequestTypes.PUT, "/events/update", {
-        attendees: [DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_3, MONGO_ID_4, MONGO_ID_5],
+        attendees: [DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_3, MONGO_ID_4, MONGO_ID_5].map(convertToMongoObjectId),
         date: "01/05/2018 11:00 AM",
         description: "New event description",
         eventId,
-        host: DEFAULT_MONGOID,
       });
       assert.deepEqual(secondUpdate.body.payload, { n: 1, nModified: 1, ok: 1 });
 
@@ -109,7 +102,6 @@ describe("Events", () => {
           "353030303030303030303030",
         ],
         description: "New event description",
-        host: "303030303030303030303030",
       });
     });
   });
@@ -128,10 +120,9 @@ describe("Events", () => {
 
     it("correctly indexes events", async () => {
       const createEventResponse = await mongoMock.sendRequest(IRequestTypes.POST, "/events/new", {
-        attendees: userIDs.slice(1, 3),
+        attendees: userIDs.slice(0, 3),
         date: "01/01/2018 10:00 AM",
         description: "First event",
-        host: userIDs[0],
       });
       expect(createEventResponse.body.message).to.equal("Attempted to create new event");
       const firstEventId = createEventResponse.body.payload.id;
@@ -148,10 +139,9 @@ describe("Events", () => {
       });
 
       const createSecondEvent = await mongoMock.sendRequest(IRequestTypes.POST, "/events/new", {
-        attendees: userIDs.slice(2),
+        attendees: [userIDs[0], ...userIDs.slice(2)],
         date: "01/05/2018 10:00 AM",
         description: "Second event",
-        host: userIDs[0],
       });
       expect(createSecondEvent.body.message).to.equal("Attempted to create new event");
       const secondEventId = createSecondEvent.body.payload.id;
@@ -187,7 +177,6 @@ describe("Events", () => {
         attendees: userIDs,
         date: "01/10/2018 10:00 AM",
         description: "Third event",
-        host: userIDs[0],
       });
       expect(createEventResponse.body.message).to.equal("Attempted to create new event");
       const thirdEvent = createEventResponse.body.payload.id;
@@ -211,7 +200,6 @@ describe("Events", () => {
         date: "01/12/2018 11:00 AM",
         description: "New third event description",
         eventId: thirdEvent,
-        host: userIDs[0],
       });
       assert.deepEqual(updateRequest.body.payload, { n: 1, nModified: 1, ok: 1 });
 
@@ -233,7 +221,6 @@ describe("Events", () => {
         attendees: userIDs,
         date: "01/10/2018 10:00 AM",
         description: "Third event",
-        host: userIDs[0],
       });
       expect(createEventResponse.body.message).to.equal("Attempted to create new event");
       const fourthEvent = createEventResponse.body.payload.id;
@@ -257,7 +244,6 @@ describe("Events", () => {
         date: "01/12/2018 11:00 AM",
         description: "New third event description",
         eventId: fourthEvent,
-        host: userIDs[0],
       });
       assert.deepEqual(updateRequest.body.payload, { n: 1, nModified: 1, ok: 1 });
 
