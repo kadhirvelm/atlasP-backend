@@ -12,7 +12,6 @@ describe("Event body checker", () => {
       [
         "Date is not valid: undefined",
         "Description is not valid: undefined",
-        "Host is not valid: undefined",
         "Attendees contain errors: undefined",
         "You're not in the event.",
       ],

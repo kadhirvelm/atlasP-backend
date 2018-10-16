@@ -7,10 +7,7 @@ const REMIND_ON_INACTIVE_DAY_COUNT = 14;
 
 const convertToMongoId = (id: string) => new mongo.ObjectId(id);
 
-const extractUsers = (event: any) => [
-  convertToMongoId(event.host),
-  ...event.attendees.map(convertToMongoId),
-];
+const extractUsers = (event: any) => [event.attendees.map(convertToMongoId)];
 
 function getRawUsers(database: mongo.Db, ...events: IEvent[][]) {
   return database
@@ -39,8 +36,7 @@ function createSingleEventString(event: any, allUsers: any) {
   return `
         <div>
             ${event.description},${new Date(event.date).toLocaleDateString()}, ${event._id},
-            <b>${renderSingleAttendee(event.host, allUsers)}, </b>
-            ${event.attendees.filter((user: any) => user.toString() !== event.host.toString()).map((user: any) => renderSingleAttendee(user, allUsers)).join(",")}
+            ${event.attendees.map((user: any) => renderSingleAttendee(user, allUsers)).join(",")}
         </div>
     `;
 }

@@ -58,3 +58,19 @@ export function isValidStringID(
 ): item is string[] {
   return typeof item[0] === "string";
 }
+
+export function hasExtraKeys(body: any, keys: string[]) {
+  const extraKeys = differenceBetweenArrays(Object.keys(body), keys);
+  return extraKeys.length > 0 ? [`Contains extra fields: ${extraKeys}`] : [];
+}
+
+export function hasMissingKeys(body: any, keys: string[]) {
+  const missingKeys = differenceBetweenArrays(keys, Object.keys(body));
+  return missingKeys.length > 0 ? [`Missing fields: ${missingKeys}`] : [];
+}
+
+export function hasCorrectKeys(body: any, checkForKeys: string[]) {
+  const extraKeys = hasExtraKeys(body, checkForKeys);
+  const missingKeys = hasMissingKeys(body, checkForKeys);
+  return extraKeys.concat(missingKeys);
+}

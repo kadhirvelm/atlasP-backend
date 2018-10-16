@@ -21,7 +21,7 @@ export class EventDatabase {
         .collection(EVENTS_COLLECTION)
         .insertOne(finalEvent);
       await this.userDatabase.indexUserEvents(
-        [finalEvent.host, ...finalEvent.attendees],
+        finalEvent.attendees,
         newEvent.insertedId,
       );
       return { id: newEvent.insertedId, newEvent };
@@ -39,7 +39,7 @@ export class EventDatabase {
         .replaceOne({ _id: eventId }, finalEvent);
 
       await this.userDatabase.indexUserEvents(
-        [finalEvent.host, ...finalEvent.attendees],
+        finalEvent.attendees,
         eventId,
       );
       return newEvent.result;
@@ -66,7 +66,7 @@ export class EventDatabase {
     const events = await this.fetchAll();
     for (const event of events) {
       await this.userDatabase.indexUserEvents(
-        [event.host, ...event.attendees],
+        event.attendees,
         event._id,
       );
     }
@@ -86,6 +86,5 @@ export class EventDatabase {
     ...event,
     attendees: parseIntoObjectIDs(Array.from(new Set(event.attendees))),
     date: new Date(event.date),
-    host: new mongo.ObjectId(event.host),
   })
 }

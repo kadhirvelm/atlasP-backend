@@ -1,7 +1,6 @@
 import mongo from "mongodb";
 
 import {
-  isAdminUser,
   isString,
   isValidDate,
   isValidMongoID,
@@ -15,9 +14,7 @@ function userIdIsInAttendees(
   if (attendees === undefined) {
     return false;
   }
-  return attendees
-    .map((attendee: string) => userId.equals(attendee))
-    .includes(true);
+  return attendees.includes(userId.toHexString());
 }
 
 export function isValidEvent(body: any, userId: mongo.ObjectId) {
@@ -28,18 +25,14 @@ export function isValidEvent(body: any, userId: mongo.ObjectId) {
   if (!isString(body.description)) {
     errorMessages.push(`Description is not valid: ${body.description}`);
   }
-  if (!isValidMongoID(body.host)) {
-    errorMessages.push(`Host is not valid: ${body.host}`);
-  }
   if (!isValidMongoIDArray(body.attendees)) {
     errorMessages.push(`Attendees contain errors: ${body.attendees}`);
   }
-  if (
-    !userId.equals(body.host)
-    && !userIdIsInAttendees(body.attendees as string[], userId)
-    && !isAdminUser(userId)
-  ) {
+  if (!userIdIsInAttendees(body.attendees as string[], userId)) {
     errorMessages.push("You're not in the event.");
+  }
+  if (body.attendees.length === 1 && body.attendees[0] === userId.toHexString()) {
+    errorMessages.push("You cannot be in an event by yourself.");
   }
   return errorMessages;
 }

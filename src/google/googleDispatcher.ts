@@ -46,12 +46,9 @@ export class GoogleDispatcher {
       );
       rawUser.slice(8).forEach((eventID: string) => {
         if (eventAttendees[eventID] === undefined) {
-          eventAttendees[eventID] = { attendees: [], host: "" };
+          eventAttendees[eventID] = { attendees: [] };
         }
         eventAttendees[eventID].attendees.push(mongoUser._id);
-        if (eventID.substring(0, 4) === rawUser[0]) {
-          eventAttendees[eventID].host = mongoUser._id;
-        }
       });
     }
     const eventValues = sheetValues.valueRanges[1].values.slice(1);
@@ -138,7 +135,6 @@ export class GoogleDispatcher {
       attendees: rawEventDetails.attendees,
       date: eventRaw[2],
       description: eventRaw[11],
-      host: rawEventDetails.host,
     };
   }
 
