@@ -33,7 +33,7 @@ function differenceBetweenDates(dateA: Date, dateB: Date) {
 const renderSingleAttendee = (userID: string, allUsers: any) => {
   const user = allUsers[userID];
   if (user === undefined) {
-    return;
+    return "";
   }
   return `${user.name}, +1${user.phoneNumber}`;
 };
