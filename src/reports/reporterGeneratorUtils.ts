@@ -7,7 +7,7 @@ const REMIND_ON_INACTIVE_DAY_COUNT = 14;
 
 const convertToMongoId = (id: string) => new mongo.ObjectId(id);
 
-const extractUsers = (event: any) => [event.attendees.map(convertToMongoId)];
+const extractUsers = (event: any) => event.attendees.map(convertToMongoId);
 
 function getRawUsers(database: mongo.Db, ...events: IEvent[][]) {
   return database
@@ -30,13 +30,7 @@ function differenceBetweenDates(dateA: Date, dateB: Date) {
   return Math.round((dateA.getTime() - dateB.getTime()) / SINGLE_DAY);
 }
 
-const renderSingleAttendee = (userID: string, allUsers: any) => {
-  const user = allUsers[userID];
-  if (user === undefined) {
-    return "";
-  }
-  return `${user.name}, +1${user.phoneNumber}`;
-};
+const renderSingleAttendee = (userID: string, allUsers: any) => `${allUsers[userID].name}, +1${allUsers[userID].phoneNumber}`;
 
 function createSingleEventString(event: any, allUsers: any) {
   return `
