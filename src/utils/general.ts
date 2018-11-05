@@ -3,6 +3,7 @@ import mongo from "mongodb";
 
 import { IFullUser } from "../users";
 
+import { IFullEvent } from "../events";
 import { generateAuthenticationToken } from "./security";
 
 const ADMINS: string[] = ["5b9a88d54f36eb0020736b43"];
@@ -56,4 +57,13 @@ export function isAdminUser(id: mongo.ObjectId) {
 
 export function flatten(previous: any[], next: any[]) {
   return previous.concat(next);
+}
+
+export function convertArrayToMap<T extends IFullUser | IFullEvent>(
+  itemArray: T[],
+): Map<string, T> {
+  const iteratable: Array<[string, T]> = itemArray.map(
+    (item): [string, T] => [item._id.toHexString(), item],
+  );
+  return new Map(iteratable);
 }
