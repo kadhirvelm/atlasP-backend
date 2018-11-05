@@ -14,6 +14,7 @@ import {
 
 const TOTAL_CONNECTIONS_MODIFIER = 1.0;
 const LATEST_EVENT_MODIFIER = 1.2;
+const NEVER_BEFORE_SEEN_FRIEND = -1;
 
 export interface IRecommendation {
   activeUser: IFullUser;
@@ -44,6 +45,7 @@ function generateRecommendationScores(
     const latestEvent = getLatestEvent(
       userConnection[1].map((id) => allUsersEventsMap.get(id.toHexString())),
     );
+
     let totalDaysSinceLastEvent = 0;
     if (latestEvent !== undefined) {
       totalDaysSinceLastEvent = differenceBetweenDates(new Date(), latestEvent.date)
@@ -51,7 +53,9 @@ function generateRecommendationScores(
     }
     const latestEventScore = totalDaysSinceLastEvent ** LATEST_EVENT_MODIFIER;
 
-    return [userConnection[0], totalConnectionsScore * latestEventScore] as [
+    const finalScore = userConnection[1].length > 0 ? totalConnectionsScore * latestEventScore : NEVER_BEFORE_SEEN_FRIEND;
+
+    return [userConnection[0], finalScore] as [
       string,
       number
     ];
@@ -76,7 +80,7 @@ function getRecommendation(
     convertArrayToMap(allUsersEventsMapped),
   );
 
-  const getNewPeople = recommendationScores.filter((score) => score[1] === 0);
+  const getNewPeople = recommendationScores.filter((score) => score[1] === NEVER_BEFORE_SEEN_FRIEND);
   if (getNewPeople.length > 0) {
     const sortedByCreationDateNewPeople = getNewPeople.sort((a, b) => differenceBetweenMongoIdDates(a[0], b[0]));
     return {
