@@ -38,10 +38,7 @@ export class EventDatabase {
         .collection(EVENTS_COLLECTION)
         .replaceOne({ _id: eventId }, finalEvent);
 
-      await this.userDatabase.indexUserEvents(
-        finalEvent.attendees,
-        eventId,
-      );
+      await this.userDatabase.indexUserEvents(finalEvent.attendees, eventId);
       return newEvent.result;
     });
   }
@@ -65,10 +62,7 @@ export class EventDatabase {
     await this.userDatabase.removeAllConnections();
     const events = await this.fetchAll();
     for (const event of events) {
-      await this.userDatabase.indexUserEvents(
-        event.attendees,
-        event._id,
-      );
+      await this.userDatabase.indexUserEvents(event.attendees, event._id);
     }
     return { message: "Successfully reindexed all connections." };
   }

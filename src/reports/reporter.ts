@@ -78,7 +78,9 @@ class PureReporter extends PureRouter {
     const allInactiveUsers = await getAllInactiveUsers(this.database);
     const mailPeopleBody = createPeopleMailBody(allInactiveUsers);
 
-    this.sendEmail(`<div>${mailEventBody}${mailPeopleBody}</div>`);
+    this.sendEmail(
+      `<div><b>Events</b><br />${mailEventBody}<br /><br /><b>People</b><br />${mailPeopleBody}</div>`,
+    );
   }
 
   private sendEmail = (mailBody: string) => {
