@@ -12,4 +12,8 @@ export interface IEvent {
   description: string;
 }
 
+export interface IFullEvent extends IEvent {
+  _id: mongo.ObjectId;
+}
+
 export const EVENTS_COLLECTION = "EVENTS";

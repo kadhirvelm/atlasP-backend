@@ -5,15 +5,16 @@ import nodemailer from "nodemailer";
 import ses from "nodemailer-ses-transport";
 
 import { PureRouter } from "../general";
+import { getAllRecommendations } from "./recommendationGenerator";
 import {
   createEventsMailBody,
   createMailSubject,
   createPeopleMailBody,
-  getAllInactiveUsers,
   getAllUsers,
+  getCategorizedUsers,
   getEventsHappeningIn24Hours,
   getEventsHappeningInTwoDays,
-} from "./reporterGeneratorUtils";
+} from "./reporterGeneratorHelpers";
 
 const REPORT_RECIPIENTS = ["luke.walquist@gmail.com", "kadhirvelm@gmail.com"];
 
@@ -75,8 +76,18 @@ class PureReporter extends PureRouter {
       allUsers,
     );
 
-    const allInactiveUsers = await getAllInactiveUsers(this.database);
-    const mailPeopleBody = createPeopleMailBody(allInactiveUsers);
+    const allCategorizedUsers = await getCategorizedUsers(this.database);
+    const allInactiveUsers = allCategorizedUsers
+      .filter((user) => user.isInactive)
+      .map((user) => user.message);
+    const allRecommendations = await getAllRecommendations(
+      allCategorizedUsers.filter((user) => !user.isInactive),
+      this.database,
+    );
+    const mailPeopleBody = createPeopleMailBody(
+      allRecommendations,
+      allInactiveUsers,
+    );
 
     this.sendEmail(
       `<div><b>Events</b><br />${mailEventBody}<br /><br /><b>People</b><br />${mailPeopleBody}</div>`,
