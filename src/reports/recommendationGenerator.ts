@@ -9,11 +9,11 @@ import {
   differenceBetweenMongoIdDates,
   getAllUsersWithIds,
   getLatestEvent,
+  REMIND_ON_INACTIVE_DAY_COUNT,
 } from "./reportGeneratorUtils";
 
 const TOTAL_CONNECTIONS_MODIFIER = 1.0;
 const LATEST_EVENT_MODIFIER = 1.2;
-const DAYS_SINCE_LAST_EVENT_CUT_OFF = 30;
 
 export interface IRecommendation {
   activeUser: IFullUser;
@@ -25,7 +25,7 @@ export interface IRecommendation {
  * The score is based on:
  * totalConnections^(TOTAL_CONNECTIONS_MODIFIER) * totalDaysSinceLastEvent^(LATEST_EVENT_MODIFIER),
  * making sure to set NaN scores for all people who the activeUser has seen less
- * than DAYS_SINCE_LAST_EVENT_CUT_OFF.
+ * than REMIND_ON_INACTIVE_DAY_COUNT.
  */
 function generateRecommendationScores(
   activeUser: IFullUser,
@@ -47,7 +47,7 @@ function generateRecommendationScores(
     let totalDaysSinceLastEvent = 0;
     if (latestEvent !== undefined) {
       totalDaysSinceLastEvent = differenceBetweenDates(new Date(), latestEvent.date)
-        - DAYS_SINCE_LAST_EVENT_CUT_OFF;
+        - REMIND_ON_INACTIVE_DAY_COUNT;
     }
     const latestEventScore = totalDaysSinceLastEvent ** LATEST_EVENT_MODIFIER;
 

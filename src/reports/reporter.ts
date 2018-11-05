@@ -16,8 +16,7 @@ import {
   getEventsHappeningInTwoDays,
 } from "./reporterGeneratorHelpers";
 
-// const REPORT_RECIPIENTS = ["luke.walquist@gmail.com", "kadhirvelm@gmail.com"];
-const REPORT_RECIPIENTS = ["kadhirvelm@gmail.com"];
+const REPORT_RECIPIENTS = ["luke.walquist@gmail.com", "kadhirvelm@gmail.com"];
 
 export const REPORT_ROOT = "/reports";
 
