@@ -116,12 +116,12 @@ export function createPeopleMailBody(
         <div>
             <b>Recommendations:</b>
             <div>
-                ${allRecommendations.join("\n")}
+                ${allRecommendations.join("<br />")}
             </div>
             <br />
             <b>Inactive users:</b>
             <div>
-                ${allInactiveUsers.join("\n")}
+                ${allInactiveUsers.join("<br />")}
             </div>
         </div>
     `;
