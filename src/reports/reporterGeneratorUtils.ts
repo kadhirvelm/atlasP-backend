@@ -14,7 +14,10 @@ function getRawUsers(database: mongo.Db, ...events: IEvent[][]) {
     .collection(USERS_COLLECTION)
     .find({
       _id: {
-        $in: events.reduce(flatten, []).map(extractUsers).reduce(flatten, []),
+        $in: events
+          .reduce(flatten, [])
+          .map(extractUsers)
+          .reduce(flatten, []),
       },
     })
     .toArray();
@@ -35,8 +38,12 @@ const renderSingleAttendee = (userID: string, allUsers: any) => `${allUsers[user
 function createSingleEventString(event: any, allUsers: any) {
   return `
         <div>
-            ${event.description},${new Date(event.date).toLocaleDateString()}, ${event._id},
-            ${event.attendees.map((user: any) => renderSingleAttendee(user, allUsers)).join(",")}
+            ${event.description},${new Date(
+  event.date,
+).toLocaleDateString()}, ${event._id},
+            ${event.attendees
+    .map((user: any) => renderSingleAttendee(user, allUsers))
+    .join(",")}
         </div>
     `;
 }
@@ -74,6 +81,18 @@ export async function getAllUsers(database: mongo.Db, ...events: IEvent[][]) {
     .reduce((a, b) => ({ ...a, ...b }), []);
 }
 
+export function getLatestEvent(events: any[]) {
+  return events
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .slice(-1)[0];
+}
+
+export function getLatestEventOnCreation(events: any[]) {
+  return events
+    .sort((a, b) => a._id.getTimestamp() - b._id.getTimestamp())
+    .slice(-1)[0];
+}
+
 export async function getAllInactiveUsers(database: mongo.Db) {
   const allClaimedUsers = await database
     .collection(USERS_COLLECTION)
@@ -94,19 +113,29 @@ export async function getAllInactiveUsers(database: mongo.Db) {
         return undefined;
       }
 
-      const allUsersEventsMapped = allUserEvents.map((eventId: string) => allLastEventsFetched.find((event) => event._id.toString() === eventId.toString()));
+      const allUsersEventsMapped = allUserEvents.map((eventId: string) => allLastEventsFetched.find(
+        (event) => event._id.toString() === eventId.toString(),
+      ));
 
       const daysSinceLastEventCreation = differenceBetweenDates(
         new Date(),
-        new mongo.ObjectId(getLatestEventOnCreation(allUsersEventsMapped)._id).getTimestamp(),
+        new mongo.ObjectId(
+          getLatestEventOnCreation(allUsersEventsMapped)._id,
+        ).getTimestamp(),
       );
       const daysSinceLastEvent = differenceBetweenDates(
         new Date(),
         getLatestEvent(allUsersEventsMapped).date,
       );
 
-      if (daysSinceLastEvent > REMIND_ON_INACTIVE_DAY_COUNT && daysSinceLastEventCreation > REMIND_ON_INACTIVE_DAY_COUNT) {
-        return `${user.name},${Math.min(daysSinceLastEvent, daysSinceLastEventCreation)} days,+1${user.phoneNumber}`;
+      if (
+        daysSinceLastEvent > REMIND_ON_INACTIVE_DAY_COUNT
+        && daysSinceLastEventCreation > REMIND_ON_INACTIVE_DAY_COUNT
+      ) {
+        return `${user.name},${Math.min(
+          daysSinceLastEvent,
+          daysSinceLastEventCreation,
+        )} days,+1${user.phoneNumber}`;
       }
 
       return undefined;
@@ -114,14 +143,6 @@ export async function getAllInactiveUsers(database: mongo.Db) {
     .filter((value) => value !== undefined);
 
   return allInactiveUsers;
-}
-
-export function getLatestEvent(events: any[]) {
-  return events.sort((a, b) => a.date.getTime() - b.date.getTime()).slice(-1)[0];
-}
-
-export function getLatestEventOnCreation(events: any[]) {
-  return events.sort((a, b) => a._id.getTimestamp() - b._id.getTimestamp()).slice(-1)[0];
 }
 
 export function createEventsMailBody(
@@ -132,10 +153,14 @@ export function createEventsMailBody(
   return `
         <div>
             <b>Events created in the last 24 hours:</b>
-            ${eventsMadeInLast24Hours.map((event) => createSingleEventString(event, allUsers)).join("\n")}
+            ${eventsMadeInLast24Hours
+    .map((event) => createSingleEventString(event, allUsers))
+    .join("\n")}
             <br />
             <b>Events happening in 2 days:</b>
-            ${eventsInTwoDays.map((event) => createSingleEventString(event, allUsers)).join("\n")}
+            ${eventsInTwoDays
+    .map((event) => createSingleEventString(event, allUsers))
+    .join("\n")}
         </div>
     `;
 }
