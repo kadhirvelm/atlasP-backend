@@ -3,7 +3,7 @@ import { EVENTS_COLLECTION, IEvent } from "../events";
 import { USERS_COLLECTION } from "../users";
 import { flatten, fullSanitizeUser } from "../utils";
 
-const REMIND_ON_INACTIVE_DAY_COUNT = 14;
+const REMIND_ON_INACTIVE_DAY_COUNT = 30;
 
 const convertToMongoId = (id: string) => new mongo.ObjectId(id);
 
@@ -80,29 +80,33 @@ export async function getAllInactiveUsers(database: mongo.Db) {
     .find({ claimed: true })
     .toArray();
   const allLastEventsOfClaimedUsers = allClaimedUsers
-    .map((user) => user.connections[user._id].slice(-1))
+    .map((user) => user.connections[user._id])
     .reduce(flatten);
 
-  const allEventsFetched = await database
+  const allLastEventsFetched = await database
     .collection(EVENTS_COLLECTION)
     .find({ _id: { $in: allLastEventsOfClaimedUsers.map(convertToMongoId) } })
     .toArray();
   const allInactiveUsers = allClaimedUsers
     .map((user) => {
-      const finalUserEventID = user.connections[user._id].pop();
-      if (finalUserEventID === undefined) {
+      const allUserEvents = user.connections[user._id];
+      if (allUserEvents === undefined || allUserEvents.length === 0) {
         return undefined;
       }
 
-      const finalEvent = allEventsFetched.find(
-        (event) => event._id.toString() === finalUserEventID.toString(),
+      const allUsersEventsMapped = allUserEvents.map((eventId: string) => allLastEventsFetched.find((event) => event._id.toString() === eventId.toString()));
+
+      const daysSinceLastEventCreation = differenceBetweenDates(
+        new Date(),
+        new mongo.ObjectId(getLatestEventOnCreation(allUsersEventsMapped)._id).getTimestamp(),
       );
       const daysSinceLastEvent = differenceBetweenDates(
         new Date(),
-        new mongo.ObjectId(finalEvent._id).getTimestamp(),
+        getLatestEvent(allUsersEventsMapped).date,
       );
-      if (daysSinceLastEvent > REMIND_ON_INACTIVE_DAY_COUNT) {
-        return `${user.name},${daysSinceLastEvent} days,+1${user.phoneNumber}`;
+
+      if (daysSinceLastEvent > REMIND_ON_INACTIVE_DAY_COUNT && daysSinceLastEventCreation > REMIND_ON_INACTIVE_DAY_COUNT) {
+        return `${user.name},${Math.min(daysSinceLastEvent, daysSinceLastEventCreation)} days,+1${user.phoneNumber}`;
       }
 
       return undefined;
@@ -110,6 +114,14 @@ export async function getAllInactiveUsers(database: mongo.Db) {
     .filter((value) => value !== undefined);
 
   return allInactiveUsers;
+}
+
+export function getLatestEvent(events: any[]) {
+  return events.sort((a, b) => a.date.getTime() - b.date.getTime()).slice(-1)[0];
+}
+
+export function getLatestEventOnCreation(events: any[]) {
+  return events.sort((a, b) => a._id.getTimestamp() - b._id.getTimestamp()).slice(-1)[0];
 }
 
 export function createEventsMailBody(
