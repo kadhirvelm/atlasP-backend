@@ -75,6 +75,7 @@ function getRecommendation(
     activeUser,
     convertArrayToMap(allUsersEventsMapped),
   );
+
   const getNewPeople = recommendationScores.filter((score) => score[1] === 0);
   if (getNewPeople.length > 0) {
     const sortedByCreationDateNewPeople = getNewPeople.sort((a, b) => differenceBetweenMongoIdDates(a[0], b[0]));
@@ -84,9 +85,18 @@ function getRecommendation(
       score: "New Friend",
     };
   }
+
   const filterOutPeopleSeenLessThanCutOff = recommendationScores.filter(
     (score) => !isNaN(score[1]),
   );
+  if (filterOutPeopleSeenLessThanCutOff.length === 0) {
+    return {
+      activeUser,
+      recommendation: activeUser._id.toHexString(),
+      score: "Add a new friend",
+    };
+  }
+
   const sortedRecommendations = filterOutPeopleSeenLessThanCutOff.sort(
     (a, b) => b[1] - a[1],
   );
