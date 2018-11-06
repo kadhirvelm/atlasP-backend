@@ -108,4 +108,20 @@ describe.only("Users", () => {
       [userIds[2]]: [],
     });
   });
+
+  it("allows a user to remove another empty user from their graph", async () => {
+    mongoMock.setAuthenticationToken(generateAuthenticationToken(new mongo.ObjectId(userIds[0])));
+    const removeUser2 = await mongoMock.sendRequest(IRequestTypes.POST, "/users/remove-connection", {
+      removeConnection: userIds[2],
+    });
+    assert.deepEqual(removeUser2.body.payload, {
+      n: 1,
+      nModified: 1,
+      ok: 1,
+    });
+    const getUser1 = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
+      id: userIds[0],
+    });
+    expect(getUser1.body.payload[0].connections[userIds[2]]).to.equal(undefined);
+  });
 });

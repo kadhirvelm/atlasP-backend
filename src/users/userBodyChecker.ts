@@ -5,6 +5,7 @@ import {
   isNumber,
   isSpecificString,
   isString,
+  isValidMongoID,
   isValidPhoneNumber,
   isValidStringArray,
 } from "../utils";
@@ -52,4 +53,8 @@ export function isValidLogin(body: any) {
     isValidPhoneNumber(body.phoneNumber)
     && (isString(body.password) || isNumber(body.temporaryPassword))
   );
+}
+
+export function isValidRemoval(body: any) {
+  return isValidMongoID(body.removeConnection);
 }
