@@ -1,6 +1,6 @@
 {
   "name": "@atlasp/backend",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "description": "Atlasp's backend",
   "main": "index.js",
   "repository": "https://github.com/kadhirvelm/atlasP-backend.git",

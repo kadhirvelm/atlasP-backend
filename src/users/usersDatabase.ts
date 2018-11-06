@@ -25,10 +25,11 @@ export class UserDatabase {
    * Public routes
    */
 
-  public createNewUser(user: IUser) {
+  public createNewUser(user: IUser, createdBy?: mongo.ObjectId) {
     return handleError(async () => {
       const finalUser = {
         ...user,
+        createdBy,
         phoneNumber: sanitizePhoneNumber(user.phoneNumber),
       };
       const newUser = await this.db
@@ -172,11 +173,12 @@ export class UserDatabase {
       singleUserConnections: IUserConnections,
       appendIds: mongo.ObjectId[],
       eventId: mongo.ObjectId,
+      singleUser?: IFullUser,
     ) => IUserConnections,
   ) {
     const allUsers = await this.getManyUsers(userIds, false);
     const usersWithConnections = allUsers.map((singleUser: IFullUser) => ({
-      connections: mapping(singleUser.connections, userIds, eventId),
+      connections: mapping(singleUser.connections, userIds, eventId, singleUser),
       id: singleUser._id,
     }));
     for (const singleUser of usersWithConnections) {
@@ -212,6 +214,7 @@ export class UserDatabase {
     singleUserConnections: IUserConnections,
     removeIds: mongo.ObjectId[],
     eventId: mongo.ObjectId,
+    singleUser: IFullUser,
   ) => {
     const copyUserConnections = { ...singleUserConnections };
     if (copyUserConnections === undefined) {
@@ -222,6 +225,9 @@ export class UserDatabase {
       const connectionIndex = currentConnections.findIndex((connection) => connection.equals(eventId));
       if (connectionIndex !== -1) {
         currentConnections.splice(connectionIndex, 1);
+        if (currentConnections.length === 0 && !id.equals(singleUser._id) && !id.equals(singleUser.createdBy)) {
+          delete copyUserConnections[id.toHexString()];
+        }
       }
     });
     return copyUserConnections;

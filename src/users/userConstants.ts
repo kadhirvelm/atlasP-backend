@@ -13,9 +13,10 @@ export interface IUserConnections {
 export interface IFullUser extends IUser {
   _id: mongo.ObjectId;
   claimed: boolean;
-  temporaryPassword: number;
-  password: string;
   connections?: IUserConnections;
+  createdBy?: mongo.ObjectId;
+  password: string;
+  temporaryPassword: number;
 }
 export const validGenders = ["m", "f", "x"];
 export const validUserKeys = [
