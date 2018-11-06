@@ -53,12 +53,11 @@ function generateRecommendationScores(
     }
     const latestEventScore = totalDaysSinceLastEvent ** LATEST_EVENT_MODIFIER;
 
-    const finalScore = userConnection[1].length > 0 ? totalConnectionsScore * latestEventScore : NEVER_BEFORE_SEEN_FRIEND;
+    const finalScore = userConnection[1].length > 0
+      ? totalConnectionsScore * latestEventScore
+      : NEVER_BEFORE_SEEN_FRIEND;
 
-    return [userConnection[0], finalScore] as [
-      string,
-      number
-    ];
+    return [userConnection[0], finalScore] as [string, number];
   });
 }
 
@@ -80,7 +79,9 @@ function getRecommendation(
     convertArrayToMap(allUsersEventsMapped),
   );
 
-  const getNewPeople = recommendationScores.filter((score) => score[1] === NEVER_BEFORE_SEEN_FRIEND);
+  const getNewPeople = recommendationScores.filter(
+    (score) => score[1] === NEVER_BEFORE_SEEN_FRIEND,
+  );
   if (getNewPeople.length > 0) {
     const sortedByCreationDateNewPeople = getNewPeople.sort((a, b) => differenceBetweenMongoIdDates(a[0], b[0]));
     return {
