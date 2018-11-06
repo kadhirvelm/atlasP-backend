@@ -25,66 +25,87 @@ describe.only("Users", () => {
 
   it("correctly adds a createdBy field", async () => {
     const createUser = await mongoMock.sendRequest(IRequestTypes.POST, "/users/new-user", {
-        gender: "X",
-        location: "SF",
-        name: "Bob A",
-        // Note: This is a fake number
-        phoneNumber: "2025550170",
+      gender: "X",
+      location: "SF",
+      name: "Bob A",
+      // Note: This is a fake number
+      phoneNumber: "2025550170",
     });
     userIds.push(createUser.body.payload.newUserId);
     const getUser = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
-        id: createUser.body.payload.newUserId,
+      id: createUser.body.payload.newUserId,
     });
     assert.deepEqual(getUser.body.payload[0], {
-        _id: userIds[0],
-        createdBy: new mongo.ObjectId(DEFAULT_MONGOID).toHexString(),
-        gender: "X",
-        location: "SF",
-        name: "Bob A",
-        phoneNumber: "2025550170",
+      _id: userIds[0],
+      createdBy: new mongo.ObjectId(DEFAULT_MONGOID).toHexString(),
+      gender: "X",
+      location: "SF",
+      name: "Bob A",
+      phoneNumber: "2025550170",
     });
   });
 
   it("correctly reindexes events after editing them", async () => {
+    mongoMock.setAuthenticationToken(generateAuthenticationToken(new mongo.ObjectId(userIds[0])));
     const createUser2 = await mongoMock.sendRequest(IRequestTypes.POST, "/users/new-user", {
-        gender: "X",
-        location: "SF",
-        name: "Joe B",
-        // Note: This is a fake number
-        phoneNumber: "2025550158",
+      gender: "X",
+      location: "SF",
+      name: "Joe B",
+      // Note: This is a fake number
+      phoneNumber: "2025550158",
     });
     userIds.push(createUser2.body.payload.newUserId);
+    const createUser3 = await mongoMock.sendRequest(IRequestTypes.POST, "/users/new-user", {
+      gender: "X",
+      location: "SF",
+      name: "Calvin C",
+      // Note: This is a fake number
+      phoneNumber: "2025550123",
+    });
+    userIds.push(createUser3.body.payload.newUserId);
+
     const createEventResponse = await mongoMock.sendRequest(IRequestTypes.POST, "/events/new", {
-        attendees: [DEFAULT_MONGOID, userIds[0], userIds[1]].map(convertToMongoObjectId),
-        date: "01/01/2018 10:00 AM",
-        description: "Test event",
+      attendees: [userIds[0], userIds[1], userIds[2]].map(convertToMongoObjectId),
+      date: "01/01/2018 10:00 AM",
+      description: "Test event",
     });
     const eventId = createEventResponse.body.payload.id;
     expect(createEventResponse.body.payload).to.not.equal(undefined);
+
     const updatedEvent = await mongoMock.sendRequest(IRequestTypes.PUT, "/events/update", {
-        attendees: [DEFAULT_MONGOID, userIds[0]].map(convertToMongoObjectId),
-        date: "01/05/2018 11:00 AM",
-        description: "New event description",
-        eventId,
+      attendees: [userIds[0], userIds[1]].map(convertToMongoObjectId),
+      date: "01/05/2018 11:00 AM",
+      description: "New event description",
+      eventId,
     });
     expect(updatedEvent.body.payload).to.not.equal(undefined);
 
-    mongoMock.setAuthenticationToken(generateAuthenticationToken(new mongo.ObjectId(userIds[1])));
-    const getUser = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
-        id: userIds[1],
+    const getUser1 = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
+      id: userIds[0],
     });
-    assert.deepEqual(getUser.body.payload[0].connections, {
-        [new mongo.ObjectId(DEFAULT_MONGOID).toHexString()]: [],
-        [userIds[1]]: [],
+    assert.deepEqual(getUser1.body.payload[0].connections, {
+      [new mongo.ObjectId(DEFAULT_MONGOID).toHexString()]: [],
+      [userIds[0]]: [eventId],
+      [userIds[1]]: [eventId],
+      [userIds[2]]: [],
     });
 
-    mongoMock.setAuthenticationToken(generateAuthenticationToken(new mongo.ObjectId(userIds[0])));
+    mongoMock.setAuthenticationToken(generateAuthenticationToken(new mongo.ObjectId(userIds[1])));
     const getUser2 = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
-        id: userIds[0],
+      id: userIds[1],
     });
     assert.deepEqual(getUser2.body.payload[0].connections, {
-        [new mongo.ObjectId(DEFAULT_MONGOID).toHexString()]: [eventId],
-        [userIds[0]]: [eventId],
+      [userIds[0]]: [eventId],
+      [userIds[1]]: [eventId],
+    });
+
+    mongoMock.setAuthenticationToken(generateAuthenticationToken(new mongo.ObjectId(userIds[2])));
+    const getUser3 = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
+      id: userIds[2],
+    });
+    assert.deepEqual(getUser3.body.payload[0].connections, {
+      [userIds[0]]: [],
+      [userIds[2]]: [],
     });
   });
 });

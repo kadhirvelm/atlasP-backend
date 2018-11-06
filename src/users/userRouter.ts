@@ -108,7 +108,10 @@ class PureUsersRouter extends PureRouter {
     if (errorMessages.length > 0) {
       return sendError(res, errorMessages);
     }
-    const newUser = await this.user.createNewUser(req.body as IUser, req.AUTHENTICATED_USER_ID);
+    const newUser = await this.user.createNewUser(
+      req.body as IUser,
+      req.AUTHENTICATED_USER_ID,
+    );
     await this.user.indexUserEvents([newUser._id, req.AUTHENTICATED_USER_ID]);
     return res.json({
       message: "Attempted to create a new user.",
