@@ -241,6 +241,7 @@ export class UserDatabase {
             allUsers.find((user) => user._id.equals(id)).createdBy,
           )
         ) {
+          // Note: delete strangers from your graph
           delete copyUserConnections[id.toHexString()];
         }
       }
