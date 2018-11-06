@@ -127,7 +127,7 @@ function assembleRecommendationString(
   recommendedFriend: IFullUser,
   score: number | string,
 ) {
-  return `${activeUser.name},should see,${
+  return `${activeUser.name},${activeUser.phoneNumber},should see,${
     recommendedFriend.name
   },${recommendedFriend.phoneNumber || "NO NUMBER"},${score}\n`;
 }
