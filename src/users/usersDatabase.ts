@@ -129,6 +129,17 @@ export class UserDatabase {
     });
   }
 
+  public async removeConnectionFromGraph(userID: mongo.ObjectId, removeConnectionId: string) {
+    const user = await this.retrieveUserWithID(userID);
+    const userConnectionCopy = { ...user.connections };
+    if (userConnectionCopy[removeConnectionId].length > 0) {
+      throw new Error("Cannot remove a non-empty connection.");
+    }
+    delete userConnectionCopy[removeConnectionId];
+    const updateUser = await this.updateUser(userID, { ...user, connections: { ...userConnectionCopy } });
+    return updateUser;
+  }
+
   public async indexUserEvents(
     userIds: mongo.ObjectId[],
     eventId?: mongo.ObjectId,

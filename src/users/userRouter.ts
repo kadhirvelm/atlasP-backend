@@ -3,6 +3,7 @@ import mongo from "mongodb";
 
 import {
   isValidLogin,
+  isValidRemoval,
   isValidUser,
   isValidUserUpdate,
 } from "./userBodyChecker";
@@ -98,6 +99,7 @@ class PureUsersRouter extends PureRouter {
     this.router.post("/getOne", verifyToken, this.handleGetSingleUser);
     this.router.post("/getMany", verifyToken, this.handleGetManyUsers);
     this.router.post("/update", verifyToken, this.handleUpdateUser);
+    this.router.post("/remove-connection", verifyToken, this.handleRemoveConnection);
   }
 
   private handleUserCreatingNewUser = async (
@@ -168,6 +170,27 @@ class PureUsersRouter extends PureRouter {
       message: "Attempted to update user.",
       payload,
     });
+  }
+
+  private handleRemoveConnection = async (
+    req: IAuthenticatedRequest,
+    res: express.Response,
+  ) => {
+    if (!isValidRemoval(req.body)) {
+      return sendError(res, ["Invalid removal ID"]);
+    }
+    try {
+      const payload = await this.user.removeConnectionFromGraph(
+        req.AUTHENTICATED_USER_ID,
+        req.body.removeConnection,
+      );
+      return res.json({
+        message: "Attempted to remove connection from user.",
+        payload,
+      });
+    } catch {
+      return sendError(res, ["We can only remove someone who has not attended any events with you."]);
+    }
   }
 }
 
