@@ -9,7 +9,7 @@ import {
   convertToMongoObjectId, DEFAULT_MONGOID, MONGO_ID_1, MONGO_ID_2, MONGO_ID_3, MONGO_ID_4, MONGO_ID_5,
 } from "../../utils/__tests__/usersUtils";
 
-describe.only("Users", () => {
+describe("Users", () => {
   let mongoMock: MongoMock;
   const userIds: string[] = [];
 
@@ -123,5 +123,26 @@ describe.only("Users", () => {
       id: userIds[0],
     });
     expect(getUser1.body.payload[0].connections[userIds[2]]).to.equal(undefined);
+  });
+
+  it("allows a user to an another to their ignore list", async () => {
+    const response = await mongoMock.sendRequest(IRequestTypes.PUT, "/users/update", {
+      gender: "X",
+      ignoreUsers: [userIds[1]],
+      location: "SF",
+      name: "Bob A",
+      // Note: This is a fake number
+      phoneNumber: "2025550170",
+    });
+    assert.deepEqual(response.body.payload, {
+      n: 1,
+      nModified: 1,
+      ok: 1,
+    });
+    const getUser = await mongoMock.sendRequest(IRequestTypes.POST, "/users/getOne", {
+      id: userIds[0],
+    });
+    expect(getUser.body.payload[0].ignoreUsers).to.have.length(1);
+    expect(getUser.body.payload[0].ignoreUsers[0]).to.equal(userIds[1]);
   });
 });
