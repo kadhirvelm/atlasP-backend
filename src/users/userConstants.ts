@@ -15,7 +15,7 @@ export interface IFullUser extends IUser {
   claimed: boolean;
   connections?: IUserConnections;
   createdBy?: mongo.ObjectId;
-  ignoreUsers?: mongo.ObjectId[];
+  ignoreUsers?: string[];
   password: string;
   temporaryPassword: number;
 }

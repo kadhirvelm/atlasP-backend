@@ -53,8 +53,10 @@ function generateRecommendationScores(
     }
     const latestEventScore = totalDaysSinceLastEvent ** LATEST_EVENT_MODIFIER;
 
+    const isOnIgnoreList = activeUser.ignoreUsers !== undefined && activeUser.ignoreUsers.includes(userConnection[0]) ? 0 : 1;
+
     const finalScore = userConnection[1].length > 0
-      ? totalConnectionsScore * latestEventScore
+      ? totalConnectionsScore * latestEventScore * isOnIgnoreList
       : NEVER_BEFORE_SEEN_FRIEND;
 
     return [userConnection[0], finalScore] as [string, number];
