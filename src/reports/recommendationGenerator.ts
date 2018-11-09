@@ -94,7 +94,7 @@ function getRecommendation(
   }
 
   const filterOutPeopleSeenLessThanCutOff = recommendationScores.filter(
-    (score) => !isNaN(score[1]),
+    (score) => !isNaN(score[1]) && score[1] > 0,
   );
   if (filterOutPeopleSeenLessThanCutOff.length === 0) {
     return {
