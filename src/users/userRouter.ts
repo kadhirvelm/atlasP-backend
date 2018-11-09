@@ -98,7 +98,7 @@ class PureUsersRouter extends PureRouter {
     this.router.post("/new-user", verifyToken, this.handleUserCreatingNewUser);
     this.router.post("/getOne", verifyToken, this.handleGetSingleUser);
     this.router.post("/getMany", verifyToken, this.handleGetManyUsers);
-    this.router.post("/update", verifyToken, this.handleUpdateUser);
+    this.router.put("/update", verifyToken, this.handleUpdateUser);
     this.router.post("/remove-connection", verifyToken, this.handleRemoveConnection);
   }
 
@@ -158,7 +158,7 @@ class PureUsersRouter extends PureRouter {
     req: IAuthenticatedRequest,
     res: express.Response,
   ) => {
-    const errorMessages = isValidUserUpdate(req.body);
+    const errorMessages = isValidUserUpdate(req.body, req.AUTHENTICATED_USER_ID);
     if (errorMessages.length > 0) {
       return sendError(res, errorMessages);
     }

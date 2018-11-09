@@ -1,4 +1,4 @@
-import { validGenders, validUserKeys } from "./userConstants";
+import mongo from "mongodb";
 
 import {
   hasCorrectKeys,
@@ -6,9 +6,11 @@ import {
   isSpecificString,
   isString,
   isValidMongoID,
+  isValidMongoIDArray,
   isValidPhoneNumber,
   isValidStringArray,
 } from "../utils";
+import { requiredUserKeys, validGenders } from "./userConstants";
 
 export function validUserBodyChecker(body: any) {
   const errorMessages = [];
@@ -24,13 +26,16 @@ export function validUserBodyChecker(body: any) {
   if (body.phoneNumber !== "" && !isValidPhoneNumber(body.phoneNumber)) {
     errorMessages.push(`Phone number is not valid: ${body.phoneNumber}`);
   }
+  if (body.ignoreUsers !== undefined && !isValidMongoIDArray(body.ignoreUsers)) {
+    errorMessages.push(`Ignore users must be an array of valid IDs: ${body.ignoreUsers}`);
+  }
   return errorMessages;
 }
 
 export function isValidUser(body: any) {
   const errorMessages = hasCorrectKeys(
     body,
-    validUserKeys.filter(
+    requiredUserKeys.filter(
       (key) => key !== "password" && key !== "temporaryPassword",
     ),
   );
@@ -40,10 +45,13 @@ export function isValidUser(body: any) {
   return validUserBodyChecker(body);
 }
 
-export function isValidUserUpdate(body: any) {
-  const errorMessages = hasCorrectKeys(body, validUserKeys);
+export function isValidUserUpdate(body: any, currentUserId: mongo.ObjectId) {
+  const errorMessages = hasCorrectKeys(body, requiredUserKeys);
   if (!isValidStringArray(Object.values(body))) {
     errorMessages.push("Cannot leave fields blank.");
+  }
+  if (body.ignoreUsers !== undefined && body.ignoreUsers.includes(currentUserId.toHexString())) {
+    errorMessages.push("Cannot ignore yourself.");
   }
   return validUserBodyChecker(body);
 }

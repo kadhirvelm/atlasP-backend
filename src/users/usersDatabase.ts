@@ -112,7 +112,7 @@ export class UserDatabase {
     });
   }
 
-  public async updateUser(userID: mongo.ObjectId, newUserDetails: any) {
+  public async updateUser(userID: mongo.ObjectId, newUserDetails: Partial<IFullUser>) {
     const user = await this.retrieveUserWithID(userID);
     const newDetails = { ...newUserDetails };
     if (newDetails.password !== undefined) {
@@ -120,7 +120,7 @@ export class UserDatabase {
       delete user.temporaryPassword;
       delete newDetails.temporaryPassword;
     }
-    const updatedUser = { ...user, ...newDetails };
+    const updatedUser: IFullUser = { ...user, ...newDetails };
     return handleError(async () => {
       const finalUpdatedUser = await this.db
         .collection(USERS_COLLECTION)
