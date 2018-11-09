@@ -57,7 +57,7 @@ function generateRecommendationScores(
 
     const finalScore = userConnection[1].length > 0
       ? totalConnectionsScore * latestEventScore * isOnIgnoreList
-      : NEVER_BEFORE_SEEN_FRIEND;
+      : NEVER_BEFORE_SEEN_FRIEND * isOnIgnoreList;
 
     return [userConnection[0], finalScore] as [string, number];
   });
