@@ -53,9 +53,11 @@ function generateRecommendationScores(
     }
     const latestEventScore = totalDaysSinceLastEvent ** LATEST_EVENT_MODIFIER;
 
+    const isOnIgnoreList = activeUser.ignoreUsers !== undefined && activeUser.ignoreUsers.includes(userConnection[0]) ? 0 : 1;
+
     const finalScore = userConnection[1].length > 0
-      ? totalConnectionsScore * latestEventScore
-      : NEVER_BEFORE_SEEN_FRIEND;
+      ? totalConnectionsScore * latestEventScore * isOnIgnoreList
+      : NEVER_BEFORE_SEEN_FRIEND * isOnIgnoreList;
 
     return [userConnection[0], finalScore] as [string, number];
   });
@@ -92,7 +94,7 @@ function getRecommendation(
   }
 
   const filterOutPeopleSeenLessThanCutOff = recommendationScores.filter(
-    (score) => !isNaN(score[1]),
+    (score) => !isNaN(score[1]) && score[1] > 0,
   );
   if (filterOutPeopleSeenLessThanCutOff.length === 0) {
     return {
