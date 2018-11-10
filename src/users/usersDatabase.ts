@@ -65,14 +65,22 @@ export class UserDatabase {
   ) {
     const user = await this.retrieveUserWithPhoneNumber(phoneNumber);
     if (
-      user == null
-      || (temporaryPassword !== undefined
-        && temporaryPassword !== user.temporaryPassword)
-      || (password !== undefined && hashPassword(password) !== user.password)
+      user == null ||
+      (temporaryPassword !== undefined &&
+        temporaryPassword !== user.temporaryPassword) ||
+      (password !== undefined && hashPassword(password) !== user.password)
     ) {
       return { error: "These are invalid credentials." };
     }
     return sanitizeUser(user);
+  }
+
+  public async resetClaimed(phoneNumber: string) {
+    const user = await this.retrieveUserWithPhoneNumber(phoneNumber);
+    if (user == null) {
+      return;
+    }
+    await this.updateUser(user._id, { claimed: false });
   }
 
   public async removeAllConnections() {
@@ -112,7 +120,10 @@ export class UserDatabase {
     });
   }
 
-  public async updateUser(userID: mongo.ObjectId, newUserDetails: Partial<IFullUser>) {
+  public async updateUser(
+    userID: mongo.ObjectId,
+    newUserDetails: Partial<IFullUser>,
+  ) {
     const user = await this.retrieveUserWithID(userID);
     const newDetails = { ...newUserDetails };
     if (newDetails.password !== undefined) {
@@ -129,14 +140,20 @@ export class UserDatabase {
     });
   }
 
-  public async removeConnectionFromGraph(userID: mongo.ObjectId, removeConnectionId: string) {
+  public async removeConnectionFromGraph(
+    userID: mongo.ObjectId,
+    removeConnectionId: string,
+  ) {
     const user = await this.retrieveUserWithID(userID);
     const userConnectionCopy = { ...user.connections };
     if (userConnectionCopy[removeConnectionId].length > 0) {
       throw new Error("Cannot remove a non-empty connection.");
     }
     delete userConnectionCopy[removeConnectionId];
-    const updateUser = await this.updateUser(userID, { ...user, connections: { ...userConnectionCopy } });
+    const updateUser = await this.updateUser(userID, {
+      ...user,
+      connections: { ...userConnectionCopy },
+    });
     return updateUser;
   }
 
@@ -241,14 +258,16 @@ export class UserDatabase {
     }
     removeIds.forEach((id) => {
       const currentConnections = copyUserConnections[id.toHexString()] || [];
-      const connectionIndex = currentConnections.findIndex((connection) => connection.equals(eventId));
+      const connectionIndex = currentConnections.findIndex((connection) =>
+        connection.equals(eventId),
+      );
       if (connectionIndex !== -1) {
         currentConnections.splice(connectionIndex, 1);
         if (
-          currentConnections.length === 0
-          && !id.equals(singleUser._id)
-          && !id.equals(singleUser.createdBy)
-          && !singleUser._id.equals(
+          currentConnections.length === 0 &&
+          !id.equals(singleUser._id) &&
+          !id.equals(singleUser.createdBy) &&
+          !singleUser._id.equals(
             allUsers.find((user) => user._id.equals(id)).createdBy,
           )
         ) {
