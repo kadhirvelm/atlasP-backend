@@ -40,7 +40,8 @@ function generateRecommendationScores(
   delete connectionsCopy[activeUser._id.toHexString()];
 
   return Object.entries(connectionsCopy).map((userConnection) => {
-    const totalConnectionsScore = userConnection[1].length ** TOTAL_CONNECTIONS_MODIFIER;
+    const totalConnectionsScore =
+      userConnection[1].length ** TOTAL_CONNECTIONS_MODIFIER;
 
     const latestEvent = getLatestEvent(
       userConnection[1].map((id) => allUsersEventsMap.get(id.toHexString())),
@@ -48,16 +49,22 @@ function generateRecommendationScores(
 
     let totalDaysSinceLastEvent = 0;
     if (latestEvent !== undefined) {
-      totalDaysSinceLastEvent = differenceBetweenDates(new Date(), latestEvent.date)
-        - REMIND_ON_INACTIVE_DAY_COUNT;
+      totalDaysSinceLastEvent =
+        differenceBetweenDates(new Date(), latestEvent.date) -
+        REMIND_ON_INACTIVE_DAY_COUNT;
     }
     const latestEventScore = totalDaysSinceLastEvent ** LATEST_EVENT_MODIFIER;
 
-    const isOnIgnoreList = activeUser.ignoreUsers !== undefined && activeUser.ignoreUsers.includes(userConnection[0]) ? 0 : 1;
+    const isOnIgnoreList =
+      activeUser.ignoreUsers !== undefined &&
+      activeUser.ignoreUsers.includes(userConnection[0])
+        ? 0
+        : 1;
 
-    const finalScore = userConnection[1].length > 0
-      ? totalConnectionsScore * latestEventScore * isOnIgnoreList
-      : NEVER_BEFORE_SEEN_FRIEND * isOnIgnoreList;
+    const finalScore =
+      userConnection[1].length > 0
+        ? totalConnectionsScore * latestEventScore * isOnIgnoreList
+        : NEVER_BEFORE_SEEN_FRIEND * isOnIgnoreList;
 
     return [userConnection[0], finalScore] as [string, number];
   });
@@ -85,7 +92,9 @@ function getRecommendation(
     (score) => score[1] === NEVER_BEFORE_SEEN_FRIEND,
   );
   if (getNewPeople.length > 0) {
-    const sortedByCreationDateNewPeople = getNewPeople.sort((a, b) => differenceBetweenMongoIdDates(a[0], b[0]));
+    const sortedByCreationDateNewPeople = getNewPeople.sort((a, b) =>
+      differenceBetweenMongoIdDates(a[0], b[0]),
+    );
     return {
       activeUser,
       recommendation: sortedByCreationDateNewPeople[0][0],
@@ -138,16 +147,21 @@ export async function getAllRecommendations(
   allActiveUsers: ICategorizedUser[],
   database: mongo.Db,
 ) {
-  const allRecommendations = allActiveUsers.map((user) => getRecommendation(user.user, user.allUsersEventsMapped));
+  const allRecommendations = allActiveUsers.map((user) =>
+    getRecommendation(user.user, user.allUsersEventsMapped),
+  );
   const allRecommendedUsers = await getAllRecommendedFriends(
     allRecommendations,
     database,
   );
-  return allRecommendations.map((recommendation) => assembleRecommendationString(
-    recommendation.activeUser,
-    allRecommendedUsers.find(
-      (user) => user._id.toHexString() === recommendation.recommendation.toString(),
+  return allRecommendations.map((recommendation) =>
+    assembleRecommendationString(
+      recommendation.activeUser,
+      allRecommendedUsers.find(
+        (user) =>
+          user._id.toHexString() === recommendation.recommendation.toString(),
+      ),
+      recommendation.score,
     ),
-    recommendation.score,
-  ));
+  );
 }

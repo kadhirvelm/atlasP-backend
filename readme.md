@@ -6,40 +6,41 @@
 
 ### /users
 
-| REST | Route | Action | Implemented |
-| ---- | ---- | -------- | ---- |
-| POST | /new | create a new user { User } | Yes |
-| POST | /new-user | fetches a single user, optionally not fully sanitizing if the token matches the request | Yes |
-| POST | /getOne | fetches the user with { id: string }, returns `[]` if no user exists | Yes |
-| POST | /getMany | fetches the user with { ids: string[] }, returns `[]` if no user exists | Yes |
-| POST | /claim | claims a user account, giving it a phone number | Yes |
-| POST | /login | checks if the user has valid login credentials | Yes |
-| PUT | /update | updates existing user credentials with | Yes |
-| POST | /remove-connection | removes an existing connection provided the user has no events with them | Yes |
+| REST | Route              | Action                                                                                  | Implemented |
+| ---- | ------------------ | --------------------------------------------------------------------------------------- | ----------- |
+| POST | /new               | create a new user { User }                                                              | Yes         |
+| POST | /new-user          | fetches a single user, optionally not fully sanitizing if the token matches the request | Yes         |
+| POST | /getOne            | fetches the user with { id: string }, returns `[]` if no user exists                    | Yes         |
+| POST | /getMany           | fetches the user with { ids: string[] }, returns `[]` if no user exists                 | Yes         |
+| POST | /claim             | claims a user account, giving it a phone number                                         | Yes         |
+| POST | /login             | checks if the user has valid login credentials                                          | Yes         |
+| PUT  | /update            | updates existing user credentials with                                                  | Yes         |
+| POST | /remove-connection | removes an existing connection provided the user has no events with them                | Yes         |
+| POST | /reset             | resets a user's claimed status to false using their phone number                        | yes         |
 
 ### /events
 
-| REST | Route | Action | Implemented |
-| ---- | ---- | -------- | ---- |
-| POST | /new | create a new event { Event } | Yes |
-| POST | /update | updates an existing event given { eventId: string, ...body } | Yes |
-| POST | /getOne | fetches a single event { eventId: string } | Yes |
-| POST | /getMany | gets many events { eventIds: string[] } | Yes |
-| GET | /reindex | reindexes all users and event connections | Yes |
+| REST | Route    | Action                                                       | Implemented |
+| ---- | -------- | ------------------------------------------------------------ | ----------- |
+| POST | /new     | create a new event { Event }                                 | Yes         |
+| POST | /update  | updates an existing event given { eventId: string, ...body } | Yes         |
+| POST | /getOne  | fetches a single event { eventId: string }                   | Yes         |
+| POST | /getMany | gets many events { eventIds: string[] }                      | Yes         |
+| GET  | /reindex | reindexes all users and event connections                    | Yes         |
 
 ### /google
 
-| REST | Route | Action | Implemented |
-| ---- | ---- | -------- | ---- |
-| POST | /new_token | writes a new google token | Yes |
-| POST | /fetch_from_sheets | appends google sheet data to the database, mostly useful for initially populating the db | Yes |
-| POST | /write_to_sheets | writes USERS and EVENTS to google sheets | Yes |
+| REST | Route              | Action                                                                                   | Implemented |
+| ---- | ------------------ | ---------------------------------------------------------------------------------------- | ----------- |
+| POST | /new_token         | writes a new google token                                                                | Yes         |
+| POST | /fetch_from_sheets | appends google sheet data to the database, mostly useful for initially populating the db | Yes         |
+| POST | /write_to_sheets   | writes USERS and EVENTS to google sheets                                                 | Yes         |
 
 ### /reports
 
-| REST | Route | Action | Implemented |
-| ---- | ---- | -------- | ---- |
-| GET | /generate | creates a new report and send it to the recipient emails | Yes |
+| REST | Route     | Action                                                   | Implemented |
+| ---- | --------- | -------------------------------------------------------- | ----------- |
+| GET  | /generate | creates a new report and send it to the recipient emails | Yes         |
 
 ## Contribution
 
