@@ -16,6 +16,7 @@
 | POST | /login             | checks if the user has valid login credentials                                          | Yes         |
 | PUT  | /update            | updates existing user credentials with                                                  | Yes         |
 | POST | /remove-connection | removes an existing connection provided the user has no events with them                | Yes         |
+| POST | /reset             | resets a user's claimed status to false using their phone number                        | yes         |
 
 ### /events
 
