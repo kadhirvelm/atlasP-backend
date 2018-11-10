@@ -4,7 +4,7 @@ import {
   IFullUser,
   IUser,
   IUserConnections,
-  USERS_COLLECTION,
+  USERS_COLLECTION
 } from "./userConstants";
 
 import { IEvent } from "../events";
@@ -15,7 +15,7 @@ import {
   isValidStringID,
   parseIntoObjectIDs,
   sanitizePhoneNumber,
-  sanitizeUser,
+  sanitizeUser
 } from "../utils";
 
 export class UserDatabase {
@@ -30,7 +30,7 @@ export class UserDatabase {
       const finalUser = {
         ...user,
         createdBy,
-        phoneNumber: sanitizePhoneNumber(user.phoneNumber),
+        phoneNumber: sanitizePhoneNumber(user.phoneNumber)
       };
       const newUser = await this.db
         .collection(USERS_COLLECTION)
@@ -44,13 +44,13 @@ export class UserDatabase {
     if (user == null || user.claimed) {
       return {
         error:
-          "Phone number is not in the database or user has already been claimed.",
+          "Phone number is not in the database or user has already been claimed."
       };
     }
     const updatedUser = {
       ...user,
       claimed: true,
-      temporaryPassword: Math.round(1000 + Math.random() * 9999),
+      temporaryPassword: Math.round(1000 + Math.random() * 9999)
     };
     await this.db
       .collection(USERS_COLLECTION)
@@ -61,7 +61,7 @@ export class UserDatabase {
   public async login(
     phoneNumber: string,
     password: string,
-    temporaryPassword?: number,
+    temporaryPassword?: number
   ) {
     const user = await this.retrieveUserWithPhoneNumber(phoneNumber);
     if (
@@ -106,7 +106,7 @@ export class UserDatabase {
 
   public async getManyUsers(
     ids: string[] | mongo.ObjectId[],
-    sanitize: boolean = true,
+    sanitize: boolean = true
   ): Promise<IFullUser[]> {
     return handleError(async () => {
       const finalIds = isValidStringID(ids) ? parseIntoObjectIDs(ids) : ids;
@@ -116,13 +116,13 @@ export class UserDatabase {
       const finalUsers = (await allUsers.toArray()) as IFullUser[];
       return sanitize
         ? finalUsers.map(fullSanitizeUser)
-        : finalUsers.map((user) => sanitizeUser(user).userDetails);
+        : finalUsers.map(user => sanitizeUser(user).userDetails);
     });
   }
 
   public async updateUser(
     userID: mongo.ObjectId,
-    newUserDetails: Partial<IFullUser>,
+    newUserDetails: Partial<IFullUser>
   ) {
     const user = await this.retrieveUserWithID(userID);
     const newDetails = { ...newUserDetails };
@@ -142,7 +142,7 @@ export class UserDatabase {
 
   public async removeConnectionFromGraph(
     userID: mongo.ObjectId,
-    removeConnectionId: string,
+    removeConnectionId: string
   ) {
     const user = await this.retrieveUserWithID(userID);
     const userConnectionCopy = { ...user.connections };
@@ -152,26 +152,26 @@ export class UserDatabase {
     delete userConnectionCopy[removeConnectionId];
     const updateUser = await this.updateUser(userID, {
       ...user,
-      connections: { ...userConnectionCopy },
+      connections: { ...userConnectionCopy }
     });
     return updateUser;
   }
 
   public async indexUserEvents(
     userIds: mongo.ObjectId[],
-    eventId?: mongo.ObjectId,
+    eventId?: mongo.ObjectId
   ) {
     return this.changeUserIndex(userIds, eventId, this.appendConnection);
   }
 
   public async removeIndexUserEvents(
     eventId: mongo.ObjectId,
-    originalEvent: IEvent,
+    originalEvent: IEvent
   ) {
     return this.changeUserIndex(
       originalEvent.attendees,
       eventId,
-      this.removeConnection,
+      this.removeConnection
     );
   }
 
@@ -180,7 +180,7 @@ export class UserDatabase {
    */
 
   private retrieveUserWithPhoneNumber(
-    phoneNumber: string,
+    phoneNumber: string
   ): Promise<IFullUser | null> {
     return this.fetchUser({ phoneNumber: sanitizePhoneNumber(phoneNumber) });
   }
@@ -202,8 +202,8 @@ export class UserDatabase {
       appendIds: mongo.ObjectId[],
       eventId: mongo.ObjectId,
       singleUser?: IFullUser,
-      allUsers?: IFullUser[],
-    ) => IUserConnections,
+      allUsers?: IFullUser[]
+    ) => IUserConnections
   ) {
     const allUsers = await this.getManyUsers(userIds, false);
     const usersWithConnections = allUsers.map((singleUser: IFullUser) => ({
@@ -212,16 +212,16 @@ export class UserDatabase {
         userIds,
         eventId,
         singleUser,
-        allUsers,
+        allUsers
       ),
-      id: singleUser._id,
+      id: singleUser._id
     }));
     for (const singleUser of usersWithConnections) {
       await this.db
         .collection(USERS_COLLECTION)
         .updateOne(
           { _id: singleUser.id },
-          { $set: { connections: singleUser.connections } },
+          { $set: { connections: singleUser.connections } }
         );
     }
     return { message: "Successfully reindexed connection" };
@@ -230,36 +230,36 @@ export class UserDatabase {
   private appendConnection = (
     singleUserConnections: IUserConnections,
     appendIds: mongo.ObjectId[],
-    eventId?: mongo.ObjectId,
+    eventId?: mongo.ObjectId
   ) => {
     const copyUserConnections = { ...singleUserConnections } || {};
-    appendIds.forEach((id) => {
+    appendIds.forEach(id => {
       const finalEventId = eventId === undefined ? [] : [eventId];
       const currentConnections = copyUserConnections[id.toHexString()] || [];
       if (!currentConnections.includes(finalEventId[0])) {
         copyUserConnections[id.toHexString()] = currentConnections.concat(
-          finalEventId,
+          finalEventId
         );
       }
     });
     return copyUserConnections;
-  }
+  };
 
   private removeConnection = (
     singleUserConnections: IUserConnections,
     removeIds: mongo.ObjectId[],
     eventId: mongo.ObjectId,
     singleUser: IFullUser,
-    allUsers: IFullUser[],
+    allUsers: IFullUser[]
   ) => {
     const copyUserConnections = { ...singleUserConnections };
     if (copyUserConnections === undefined) {
       return copyUserConnections;
     }
-    removeIds.forEach((id) => {
+    removeIds.forEach(id => {
       const currentConnections = copyUserConnections[id.toHexString()] || [];
-      const connectionIndex = currentConnections.findIndex((connection) =>
-        connection.equals(eventId),
+      const connectionIndex = currentConnections.findIndex(connection =>
+        connection.equals(eventId)
       );
       if (connectionIndex !== -1) {
         currentConnections.splice(connectionIndex, 1);
@@ -268,7 +268,7 @@ export class UserDatabase {
           !id.equals(singleUser._id) &&
           !id.equals(singleUser.createdBy) &&
           !singleUser._id.equals(
-            allUsers.find((user) => user._id.equals(id)).createdBy,
+            allUsers.find(user => user._id.equals(id)).createdBy
           )
         ) {
           // Note: delete strangers from your graph
@@ -277,5 +277,5 @@ export class UserDatabase {
       }
     });
     return copyUserConnections;
-  }
+  };
 }
