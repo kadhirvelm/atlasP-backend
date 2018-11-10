@@ -15,7 +15,7 @@ import {
   MONGO_ID_5
 } from "../../utils/__tests__/usersUtils";
 
-describe.only("Users", () => {
+describe("Users", () => {
   let mongoMock: MongoMock;
   const userIds: string[] = [];
 
