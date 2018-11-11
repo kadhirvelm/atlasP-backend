@@ -9,7 +9,7 @@ import {
   DEFAULT_MONGOID
 } from "../../utils/__tests__/usersUtils";
 
-describe.only("Users", () => {
+describe("Users", () => {
   let mongoMock: MongoMock;
   const userIds: string[] = [];
 
@@ -38,20 +38,47 @@ describe.only("Users", () => {
       }
     );
     userIds.push(createUser.body.payload.newUserId);
+    mongoMock.setAuthenticationToken(
+      generateAuthenticationToken(new mongo.ObjectId(userIds[0]))
+    );
     const getUser = await mongoMock.sendRequest(
       IRequestTypes.POST,
       "/users/getOne",
       {
-        id: createUser.body.payload.newUserId
+        id: userIds[0]
       }
     );
+    const defaultID = new mongo.ObjectId(DEFAULT_MONGOID).toHexString();
     assert.deepEqual(getUser.body.payload[0], {
       _id: userIds[0],
-      createdBy: new mongo.ObjectId(DEFAULT_MONGOID).toHexString(),
+      connections: {
+        [defaultID]: [],
+        [userIds[0]]: []
+      },
+      createdBy: defaultID,
       gender: "X",
       location: "SF",
       name: "Bob A",
       phoneNumber: "2025550170"
+    });
+  });
+
+  it("correctly sanitizes users when fetching them", async () => {
+    mongoMock.setAuthenticationToken(
+      generateAuthenticationToken(new mongo.ObjectId(DEFAULT_MONGOID))
+    );
+    const getUser = await mongoMock.sendRequest(
+      IRequestTypes.POST,
+      "/users/getOne",
+      {
+        id: userIds[0]
+      }
+    );
+    assert.deepEqual(getUser.body.payload[0], {
+      _id: userIds[0],
+      gender: "X",
+      location: "SF",
+      name: "Bob A"
     });
   });
 

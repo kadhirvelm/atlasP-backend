@@ -11,7 +11,7 @@ const ADMINS: string[] = ["5b9a88d54f36eb0020736b43"];
 export function sendError(res?: express.Response, message?: string[]) {
   const errorMessage = {
     message,
-    status: "Error, improperly formatted data",
+    status: "Error, improperly formatted data"
   };
   if (res !== undefined) {
     res.status(400).json(errorMessage);
@@ -28,27 +28,30 @@ export function sanitizePhoneNumber(phoneNumber: string | undefined) {
 
 export function sanitizeUser(
   user: IFullUser,
-  shouldGenerateToken: boolean = true,
+  shouldGenerateToken: boolean = true
 ) {
   const finalUser = { ...user };
   delete finalUser.password;
   delete finalUser.temporaryPassword;
-  const authenticationToken = shouldGenerateToken && generateAuthenticationToken(user._id);
+  const authenticationToken =
+    shouldGenerateToken && generateAuthenticationToken(user._id);
   return {
     token: authenticationToken,
-    userDetails: finalUser,
+    userDetails: finalUser
   };
 }
 
 export function fullSanitizeUser(user: IFullUser) {
-  const finalSanitization = sanitizeUser(user, false);
-  delete finalSanitization.userDetails.connections;
-  delete finalSanitization.userDetails.claimed;
-  return finalSanitization.userDetails;
+  const { userDetails } = sanitizeUser(user, false);
+  delete userDetails.connections;
+  delete userDetails.ignoreUsers;
+  delete userDetails.createdBy;
+  delete userDetails.phoneNumber;
+  return userDetails;
 }
 
 export function parseIntoObjectIDs(ids: string[]): mongo.ObjectId[] {
-  return ids.map((id) => new mongo.ObjectId(id));
+  return ids.map(id => new mongo.ObjectId(id));
 }
 
 export function isAdminUser(id: mongo.ObjectId) {
@@ -60,10 +63,10 @@ export function flatten(previous: any[], next: any[]) {
 }
 
 export function convertArrayToMap<T extends IFullUser | IFullEvent>(
-  itemArray: T[],
+  itemArray: T[]
 ): Map<string, T> {
   const iteratable: Array<[string, T]> = itemArray.map(
-    (item): [string, T] => [item._id.toHexString(), item],
+    (item): [string, T] => [item._id.toHexString(), item]
   );
   return new Map(iteratable);
 }
