@@ -160,12 +160,11 @@ export class UserDatabase {
   ) {
     const user = await this.retrieveUserWithID(userID);
     const userConnectionCopy = { ...user.connections };
-    if (userConnectionCopy[removeConnectionId].length > 0) {
+    if (userConnectionCopy[removeConnectionId] === undefined) {
       throw new Error("Cannot remove a non-empty connection.");
     }
     delete userConnectionCopy[removeConnectionId];
     const updateUser = await this.updateUser(userID, {
-      ...user,
       connections: { ...userConnectionCopy }
     });
     return updateUser;
