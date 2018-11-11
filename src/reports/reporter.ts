@@ -12,8 +12,9 @@ import {
   createPeopleMailBody,
   getAllUsers,
   getCategorizedUsers,
+  getDadJoke,
   getEventsHappeningIn24Hours,
-  getEventsHappeningInTwoDays,
+  getEventsHappeningInTwoDays
 } from "./reporterGeneratorHelpers";
 
 const REPORT_RECIPIENTS = ["luke.walquist@gmail.com", "kadhirvelm@gmail.com"];
@@ -33,10 +34,10 @@ class PureReporter extends PureRouter {
       this.createReport,
       null,
       false,
-      "Asia/Singapore",
+      "Asia/Singapore"
     );
     report.start();
-  }
+  };
 
   public mountPublicRoutes() {
     this.router.get("/generate", this.sendOutReport);
@@ -48,13 +49,13 @@ class PureReporter extends PureRouter {
 
   private sendOutReport = async (
     req: express.Request,
-    res: express.Response,
+    res: express.Response
   ) => {
     await this.createReport();
     return res.json({
-      message: "Sent report to recipients.",
+      message: "Sent report to recipients."
     });
-  }
+  };
 
   /**
    * Generator functions
@@ -62,52 +63,54 @@ class PureReporter extends PureRouter {
 
   private createReport = async () => {
     const eventsMadeInLast24Hours = await getEventsHappeningIn24Hours(
-      this.database,
+      this.database
     );
     const eventsInTwoDays = await getEventsHappeningInTwoDays(this.database);
     const allUsers = await getAllUsers(
       this.database,
       eventsInTwoDays,
-      eventsMadeInLast24Hours,
+      eventsMadeInLast24Hours
     );
     const mailEventBody = createEventsMailBody(
       eventsMadeInLast24Hours,
       eventsInTwoDays,
-      allUsers,
+      allUsers
     );
 
     const allCategorizedUsers = await getCategorizedUsers(this.database);
     const allInactiveUsers = allCategorizedUsers
-      .filter((user) => user.isInactive)
-      .map((user) => user.message);
+      .filter(user => user.isInactive)
+      .map(user => user.message);
     const allRecommendations = await getAllRecommendations(
-      allCategorizedUsers.filter((user) => !user.isInactive),
-      this.database,
+      allCategorizedUsers.filter(user => !user.isInactive),
+      this.database
     );
     const mailPeopleBody = createPeopleMailBody(
       allRecommendations,
-      allInactiveUsers,
+      allInactiveUsers
     );
 
+    const dadJoke = await getDadJoke();
+
     this.sendEmail(
-      `<div><b>Events</b><br />${mailEventBody}<br /><br /><b>People</b><br />${mailPeopleBody}</div>`,
+      `<div><b>Events</b><br />${mailEventBody}<br /><br /><b>People</b><br />${mailPeopleBody}<br /><b>Dad Joke</b><br />${dadJoke}</div>`
     );
-  }
+  };
 
   private sendEmail = (mailBody: string) => {
     const transporter = nodemailer.createTransport(
       ses({
         accessKeyId: "AKIAIUXM6T7JECPWZUSQ",
         region: "us-west-2",
-        secretAccessKey: process.env.CLIENT_GMAIL_SECRET,
-      } as any),
+        secretAccessKey: process.env.CLIENT_GMAIL_SECRET
+      } as any)
     );
 
     const mailOptions = {
       from: "atlas.people.1@gmail.com",
       html: mailBody,
       subject: createMailSubject(),
-      to: REPORT_RECIPIENTS,
+      to: REPORT_RECIPIENTS
     };
 
     transporter.sendMail(mailOptions, (err, info) => {
@@ -118,7 +121,8 @@ class PureReporter extends PureRouter {
       // tslint:disable-next-line:no-console
       console.log(info);
     });
-  }
+  };
 }
 
-export const ReporterRoutes = (database: mongo.Db) => new PureReporter(database).router;
+export const ReporterRoutes = (database: mongo.Db) =>
+  new PureReporter(database).router;
