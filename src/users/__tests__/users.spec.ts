@@ -3,16 +3,10 @@ import "mocha";
 import mongo from "mongodb";
 
 import { generateAuthenticationToken } from "../../utils";
-import { compareEvents } from "../../utils/__tests__/eventsUtils";
 import { IRequestTypes, MongoMock } from "../../utils/__tests__/generalUtils";
 import {
   convertToMongoObjectId,
-  DEFAULT_MONGOID,
-  MONGO_ID_1,
-  MONGO_ID_2,
-  MONGO_ID_3,
-  MONGO_ID_4,
-  MONGO_ID_5
+  DEFAULT_MONGOID
 } from "../../utils/__tests__/usersUtils";
 
 describe("Users", () => {
@@ -44,20 +38,59 @@ describe("Users", () => {
       }
     );
     userIds.push(createUser.body.payload.newUserId);
+    mongoMock.setAuthenticationToken(
+      generateAuthenticationToken(new mongo.ObjectId(userIds[0]))
+    );
     const getUser = await mongoMock.sendRequest(
       IRequestTypes.POST,
       "/users/getOne",
       {
-        id: createUser.body.payload.newUserId
+        id: userIds[0]
       }
     );
+    const defaultID = new mongo.ObjectId(DEFAULT_MONGOID).toHexString();
     assert.deepEqual(getUser.body.payload[0], {
       _id: userIds[0],
-      createdBy: new mongo.ObjectId(DEFAULT_MONGOID).toHexString(),
+      connections: {
+        [defaultID]: [],
+        [userIds[0]]: []
+      },
+      createdBy: defaultID,
       gender: "X",
       location: "SF",
       name: "Bob A",
       phoneNumber: "2025550170"
+    });
+  });
+
+  it("allows a user to claim their account using their phone number", async () => {
+    const claimUser = await mongoMock.sendRequest(
+      IRequestTypes.POST,
+      "/users/claim",
+      {
+        phoneNumber: "2025550170"
+      }
+    );
+    expect(claimUser.body.payload.temporaryPassword).to.not.equal(undefined);
+  });
+
+  it("correctly sanitizes users when fetching them", async () => {
+    mongoMock.setAuthenticationToken(
+      generateAuthenticationToken(new mongo.ObjectId(DEFAULT_MONGOID))
+    );
+    const getUser = await mongoMock.sendRequest(
+      IRequestTypes.POST,
+      "/users/getOne",
+      {
+        id: userIds[0]
+      }
+    );
+    assert.deepEqual(getUser.body.payload[0], {
+      _id: userIds[0],
+      claimed: true,
+      gender: "X",
+      location: "SF",
+      name: "Bob A"
     });
   });
 
@@ -225,15 +258,7 @@ describe("Users", () => {
         phoneNumber: "2025550170"
       }
     );
-    expect(claim1.body.payload.temporaryPassword).to.not.equal(undefined);
-    const claim2 = await mongoMock.sendRequest(
-      IRequestTypes.POST,
-      "/users/claim",
-      {
-        phoneNumber: "2025550170"
-      }
-    );
-    expect(claim2.body.payload.error).to.equal(
+    expect(claim1.body.payload.error).to.equal(
       "Phone number is not in the database or user has already been claimed."
     );
     const reset = await mongoMock.sendRequest(
@@ -246,13 +271,58 @@ describe("Users", () => {
     expect(reset.body.payload.message).to.equal(
       "If this phone number exists in our database, it has been reset."
     );
-    const claim3 = await mongoMock.sendRequest(
+    const claim2 = await mongoMock.sendRequest(
       IRequestTypes.POST,
       "/users/claim",
       {
         phoneNumber: "2025550170"
       }
     );
-    expect(claim3.body.payload.temporaryPassword).to.not.equal(undefined);
+    expect(claim2.body.payload.temporaryPassword).to.not.equal(undefined);
+  });
+
+  it("allows a user to update another user's details", async () => {
+    mongoMock.setAuthenticationToken(
+      generateAuthenticationToken(new mongo.ObjectId(userIds[0]))
+    );
+    const updateUser2 = await mongoMock.sendRequest(
+      IRequestTypes.PUT,
+      "/users/update-other",
+      {
+        newUserDetails: {
+          name: "UPDATE USER 2 NAME JOE"
+        },
+        userId: userIds[1]
+      }
+    );
+    assert.deepEqual(updateUser2.body.payload, {
+      n: 1,
+      nModified: 1,
+      ok: 1
+    });
+    const getUser2 = await mongoMock.sendRequest(
+      IRequestTypes.POST,
+      "/users/getOne",
+      {
+        id: userIds[1]
+      }
+    );
+    expect(getUser2.body.payload[0].name).to.equal("UPDATE USER 2 NAME JOE");
+    mongoMock.setAuthenticationToken(
+      generateAuthenticationToken(new mongo.ObjectId(userIds[1]))
+    );
+    const updateUser1 = await mongoMock.sendRequest(
+      IRequestTypes.PUT,
+      "/users/update-other",
+      {
+        newUserDetails: {
+          name: "CANNOT UPDATE TO THIS NAME"
+        },
+        userId: userIds[0]
+      }
+    );
+    expect(updateUser1.body.payload.error).to.equal(
+      "We cannot update a claimed user's account details."
+    );
   });
 });

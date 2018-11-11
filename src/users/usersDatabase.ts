@@ -140,6 +140,20 @@ export class UserDatabase {
     });
   }
 
+  public async updateOtherUser(
+    currentUserId: mongo.ObjectId,
+    userId: string,
+    newUserDetails: Partial<IFullUser>
+  ) {
+    const user = await this.retrieveUserWithID(new mongo.ObjectId(userId));
+    if (user.claimed === true && !user._id.equals(currentUserId)) {
+      return {
+        error: "We cannot update a claimed user's account details."
+      };
+    }
+    return this.updateUser(user._id, newUserDetails);
+  }
+
   public async removeConnectionFromGraph(
     userID: mongo.ObjectId,
     removeConnectionId: string
