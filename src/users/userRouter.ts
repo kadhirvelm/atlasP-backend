@@ -99,7 +99,7 @@ class PureUsersRouter extends PureRouter {
       return sendError(res, ["Invalid phone number", req.body.phoneNumber]);
     }
     await this.user.resetClaimed(req.body.phoneNumber);
-    return res.status(200).json({
+    return res.json({
       payload: {
         message:
           "If this phone number exists in our database, it has been reset."
@@ -115,6 +115,7 @@ class PureUsersRouter extends PureRouter {
     this.router.post("/getOne", verifyToken, this.handleGetSingleUser);
     this.router.post("/getMany", verifyToken, this.handleGetManyUsers);
     this.router.put("/update", verifyToken, this.handleUpdateUser);
+    this.router.put("/update-other", verifyToken, this.handleUpdateOtherUser);
     this.router.post(
       "/remove-connection",
       verifyToken,
@@ -191,6 +192,28 @@ class PureUsersRouter extends PureRouter {
     );
     return res.json({
       message: "Attempted to update user.",
+      payload
+    });
+  };
+
+  private handleUpdateOtherUser = async (
+    req: IAuthenticatedRequest,
+    res: express.Response
+  ) => {
+    const errorMessages = isValidUserUpdate(
+      req.body.newUserDetails,
+      req.body.userId
+    );
+    if (errorMessages.length > 0) {
+      return sendError(res, errorMessages);
+    }
+    const payload = await this.user.updateOtherUser(
+      req.AUTHENTICATED_USER_ID,
+      req.body.userId,
+      req.body.newUserDetails
+    );
+    return res.status(getStatus(payload)).json({
+      message: "Attempted to update other user.",
       payload
     });
   };

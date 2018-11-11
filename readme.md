@@ -15,8 +15,9 @@
 | POST | /claim             | claims a user account, giving it a phone number                                         | Yes         |
 | POST | /login             | checks if the user has valid login credentials                                          | Yes         |
 | PUT  | /update            | updates existing user credentials with                                                  | Yes         |
+| PUT  | /update-other      | updates another user provided that user has not claimed their account                   | Yes         |
 | POST | /remove-connection | removes an existing connection provided the user has no events with them                | Yes         |
-| POST | /reset             | resets a user's claimed status to false using their phone number                        | yes         |
+| POST | /reset             | resets a user's claimed status to false using their phone number                        | Yes         |
 
 ### /events
 

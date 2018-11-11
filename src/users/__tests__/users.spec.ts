@@ -3,19 +3,13 @@ import "mocha";
 import mongo from "mongodb";
 
 import { generateAuthenticationToken } from "../../utils";
-import { compareEvents } from "../../utils/__tests__/eventsUtils";
 import { IRequestTypes, MongoMock } from "../../utils/__tests__/generalUtils";
 import {
   convertToMongoObjectId,
-  DEFAULT_MONGOID,
-  MONGO_ID_1,
-  MONGO_ID_2,
-  MONGO_ID_3,
-  MONGO_ID_4,
-  MONGO_ID_5
+  DEFAULT_MONGOID
 } from "../../utils/__tests__/usersUtils";
 
-describe("Users", () => {
+describe.only("Users", () => {
   let mongoMock: MongoMock;
   const userIds: string[] = [];
 
@@ -254,5 +248,50 @@ describe("Users", () => {
       }
     );
     expect(claim3.body.payload.temporaryPassword).to.not.equal(undefined);
+  });
+
+  it("allows a user to update another user's details", async () => {
+    mongoMock.setAuthenticationToken(
+      generateAuthenticationToken(new mongo.ObjectId(userIds[0]))
+    );
+    const updateUser2 = await mongoMock.sendRequest(
+      IRequestTypes.PUT,
+      "/users/update-other",
+      {
+        newUserDetails: {
+          name: "UPDATE USER 2 NAME JOE"
+        },
+        userId: userIds[1]
+      }
+    );
+    assert.deepEqual(updateUser2.body.payload, {
+      n: 1,
+      nModified: 1,
+      ok: 1
+    });
+    const getUser2 = await mongoMock.sendRequest(
+      IRequestTypes.POST,
+      "/users/getOne",
+      {
+        id: userIds[1]
+      }
+    );
+    expect(getUser2.body.payload[0].name).to.equal("UPDATE USER 2 NAME JOE");
+    mongoMock.setAuthenticationToken(
+      generateAuthenticationToken(new mongo.ObjectId(userIds[1]))
+    );
+    const updateUser1 = await mongoMock.sendRequest(
+      IRequestTypes.PUT,
+      "/users/update-other",
+      {
+        newUserDetails: {
+          name: "CANNOT UPDATE TO THIS NAME"
+        },
+        userId: userIds[0]
+      }
+    );
+    expect(updateUser1.body.payload.error).to.equal(
+      "We cannot update a claimed user's account details."
+    );
   });
 });
