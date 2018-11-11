@@ -1,12 +1,13 @@
 {
   "name": "@atlasp/backend",
-  "version": "1.14.1",
+  "version": "1.15.0",
   "description": "Atlasp's backend",
   "main": "index.js",
   "repository": "https://github.com/kadhirvelm/atlasP-backend.git",
   "author": "kadhirvelm",
   "license": "MIT",
   "dependencies": {
+    "axios": "^0.18.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.3",
     "cron": "^1.4.1",
@@ -47,6 +48,7 @@
     "all": true
   },
   "devDependencies": {
+    "@types/axios": "^0.14.0",
     "@types/bcryptjs": "^2.4.1",
     "@types/body-parser": "^1.17.0",
     "@types/chai": "^4.1.6",
