@@ -198,6 +198,19 @@ describe("Users", () => {
     mongoMock.setAuthenticationToken(
       generateAuthenticationToken(new mongo.ObjectId(userIds[0]))
     );
+    await mongoMock.sendRequest(IRequestTypes.PUT, "/users/update", {
+      password: "TEST_PASSWORD_1"
+    });
+    const login = await mongoMock.sendRequest(
+      IRequestTypes.POST,
+      "/users/login",
+      {
+        password: "TEST_PASSWORD_1",
+        phoneNumber: "2025550170"
+      }
+    );
+    expect(login.body.payload).to.not.equal(undefined);
+    mongoMock.setAuthenticationToken(login.body.payload.token);
     const removeUser2 = await mongoMock.sendRequest(
       IRequestTypes.POST,
       "/users/remove-connection",
@@ -220,6 +233,15 @@ describe("Users", () => {
     expect(getUser1.body.payload[0].connections[userIds[2]]).to.equal(
       undefined
     );
+    const login2 = await mongoMock.sendRequest(
+      IRequestTypes.POST,
+      "/users/login",
+      {
+        password: "TEST_PASSWORD_1",
+        phoneNumber: "2025550170"
+      }
+    );
+    expect(login2.body.payload.token).to.not.equal(undefined);
   });
 
   it("allows a user to an another to their ignore list", async () => {
