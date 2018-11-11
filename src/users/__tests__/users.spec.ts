@@ -63,6 +63,17 @@ describe("Users", () => {
     });
   });
 
+  it("allows a user to claim their account using their phone number", async () => {
+    const claimUser = await mongoMock.sendRequest(
+      IRequestTypes.POST,
+      "/users/claim",
+      {
+        phoneNumber: "2025550170"
+      }
+    );
+    expect(claimUser.body.payload.temporaryPassword).to.not.equal(undefined);
+  });
+
   it("correctly sanitizes users when fetching them", async () => {
     mongoMock.setAuthenticationToken(
       generateAuthenticationToken(new mongo.ObjectId(DEFAULT_MONGOID))
@@ -76,6 +87,7 @@ describe("Users", () => {
     );
     assert.deepEqual(getUser.body.payload[0], {
       _id: userIds[0],
+      claimed: true,
       gender: "X",
       location: "SF",
       name: "Bob A"
@@ -246,15 +258,7 @@ describe("Users", () => {
         phoneNumber: "2025550170"
       }
     );
-    expect(claim1.body.payload.temporaryPassword).to.not.equal(undefined);
-    const claim2 = await mongoMock.sendRequest(
-      IRequestTypes.POST,
-      "/users/claim",
-      {
-        phoneNumber: "2025550170"
-      }
-    );
-    expect(claim2.body.payload.error).to.equal(
+    expect(claim1.body.payload.error).to.equal(
       "Phone number is not in the database or user has already been claimed."
     );
     const reset = await mongoMock.sendRequest(
@@ -267,14 +271,14 @@ describe("Users", () => {
     expect(reset.body.payload.message).to.equal(
       "If this phone number exists in our database, it has been reset."
     );
-    const claim3 = await mongoMock.sendRequest(
+    const claim2 = await mongoMock.sendRequest(
       IRequestTypes.POST,
       "/users/claim",
       {
         phoneNumber: "2025550170"
       }
     );
-    expect(claim3.body.payload.temporaryPassword).to.not.equal(undefined);
+    expect(claim2.body.payload.temporaryPassword).to.not.equal(undefined);
   });
 
   it("allows a user to update another user's details", async () => {
