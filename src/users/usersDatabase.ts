@@ -154,6 +154,41 @@ export class UserDatabase {
     return this.updateUser(user._id, newUserDetails);
   }
 
+  public async addConnectionToGraph(
+    userID: mongo.ObjectId,
+    phoneNumber: string
+  ) {
+    const addUser = await this.retrieveUserWithPhoneNumber(phoneNumber);
+    if (addUser == null) {
+      return {
+        error: `Hum, we can't seem to find anyone with the number: ${phoneNumber}`
+      };
+    }
+
+    const currentUser = await this.retrieveUserWithID(userID);
+    if (currentUser.connections[addUser._id.toHexString()] !== undefined) {
+      return {
+        error: `You already have ${addUser.name} on your graph.`
+      };
+    }
+
+    await this.updateUser(currentUser._id, {
+      connections: {
+        ...currentUser.connections,
+        [addUser._id.toHexString()]: []
+      }
+    });
+    await this.updateUser(addUser._id, {
+      connections: {
+        ...addUser.connections,
+        [currentUser._id.toHexString()]: []
+      }
+    });
+    return {
+      message: `Successfully added ${addUser.name} to your graph.`
+    };
+  }
+
   public async removeConnectionFromGraph(
     userID: mongo.ObjectId,
     removeConnectionId: string
