@@ -435,7 +435,7 @@ describe("Events", () => {
         "Attempted to create new event"
       );
       const deleteEventResponse = await mongoMock.sendRequest(
-        IRequestTypes.DELETE,
+        IRequestTypes.POST,
         "/events/delete",
         {
           eventId: createEventResponse.body.payload.id
