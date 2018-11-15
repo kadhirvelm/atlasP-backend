@@ -22,7 +22,7 @@ export class EventDatabase {
         .insertOne(finalEvent);
       await this.userDatabase.indexUserEvents(
         finalEvent.attendees,
-        newEvent.insertedId,
+        newEvent.insertedId
       );
       return { id: newEvent.insertedId, newEvent };
     });
@@ -43,7 +43,7 @@ export class EventDatabase {
     });
   }
 
-  public async getOneEvent(eventId: string) {
+  public async getOneEvent(eventId: string): Promise<IEvent> {
     const events = await this.getManyEvents([eventId]);
     return events[0];
   }
@@ -55,6 +55,21 @@ export class EventDatabase {
         .find({ _id: { $in: parseIntoObjectIDs(eventIds) } })
         .sort({ date: 1 });
       return allEvents.toArray();
+    });
+  }
+
+  public async deleteOneEvent(eventId: string, userId: mongo.ObjectId) {
+    return handleError(async () => {
+      const mongoEventId = new mongo.ObjectId(eventId);
+      const originalEvent = await this.getOneEvent(eventId);
+      await this.userDatabase.removeIndexUserEvents(
+        mongoEventId,
+        originalEvent
+      );
+
+      return await this.db
+        .collection(EVENTS_COLLECTION)
+        .deleteOne({ _id: mongoEventId });
     });
   }
 
@@ -79,6 +94,6 @@ export class EventDatabase {
   private cleanRawIntoFinal = (event: IRawEvent): IEvent => ({
     ...event,
     attendees: parseIntoObjectIDs(Array.from(new Set(event.attendees))),
-    date: new Date(event.date),
-  })
+    date: new Date(event.date)
+  });
 }

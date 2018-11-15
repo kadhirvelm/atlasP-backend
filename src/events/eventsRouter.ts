@@ -6,11 +6,12 @@ import { EventDatabase } from "./eventsDatabase";
 
 import { PureRouter } from "../general";
 import {
+  getStatus,
   IAuthenticatedRequest,
   isValidMongoID,
   isValidMongoIDArray,
   sendError,
-  verifyToken,
+  verifyToken
 } from "../utils";
 import { isValidEvent, isValidEventUpdate } from "./eventBodyChecker";
 
@@ -30,12 +31,13 @@ class PureEventsRouter extends PureRouter {
     this.router.put("/update", verifyToken, this.handleUpdateEvent);
     this.router.post("/getOne", verifyToken, this.handleGetOneEvent);
     this.router.post("/getMany", verifyToken, this.handleGetManyEvents);
+    this.router.delete("/delete", verifyToken, this.handleDeleteEvent);
     this.router.get("/reindex", verifyToken, this.handleReindex);
   }
 
   private handleCreateEvent = async (
     req: IAuthenticatedRequest,
-    res: express.Response,
+    res: express.Response
   ) => {
     const errorMessages = isValidEvent(req.body, req.AUTHENTICATED_USER_ID);
     if (errorMessages.length > 0) {
@@ -44,17 +46,17 @@ class PureEventsRouter extends PureRouter {
     const payload = await this.events.createNewEvent(req.body as IRawEvent);
     return res.json({
       message: "Attempted to create new event",
-      payload,
+      payload
     });
-  }
+  };
 
   private handleUpdateEvent = async (
     req: IAuthenticatedRequest,
-    res: express.Response,
+    res: express.Response
   ) => {
     const errorMessages = isValidEventUpdate(
       req.body,
-      req.AUTHENTICATED_USER_ID,
+      req.AUTHENTICATED_USER_ID
     );
     if (errorMessages.length > 0) {
       return sendError(res, errorMessages);
@@ -63,17 +65,17 @@ class PureEventsRouter extends PureRouter {
     delete req.body.eventId;
     const payload = await this.events.updateEvent(
       new mongo.ObjectId(eventId),
-      req.body as IRawEvent,
+      req.body as IRawEvent
     );
     return res.json({
       message: "Attempted to update event",
-      payload,
+      payload
     });
-  }
+  };
 
   private handleGetOneEvent = async (
     req: IAuthenticatedRequest,
-    res: express.Response,
+    res: express.Response
   ) => {
     if (!isValidMongoID(req.body.eventId)) {
       return sendError(res, [`Invalid event ID: ${req.body.eventId}`]);
@@ -81,13 +83,13 @@ class PureEventsRouter extends PureRouter {
     const payload = await this.events.getOneEvent(req.body.eventId);
     return res.json({
       message: "Attempted to get one event",
-      payload,
+      payload
     });
-  }
+  };
 
   private handleGetManyEvents = async (
     req: IAuthenticatedRequest,
-    res: express.Response,
+    res: express.Response
   ) => {
     if (!isValidMongoIDArray(req.body.eventIds)) {
       return sendError(res, [`Invalid event IDs: ${req.body.eventIds}`]);
@@ -95,13 +97,30 @@ class PureEventsRouter extends PureRouter {
     const payload = await this.events.getManyEvents(req.body.eventIds);
     return res.json({
       message: "Attempted to get many events",
-      payload,
+      payload
     });
-  }
+  };
+
+  private handleDeleteEvent = async (
+    req: IAuthenticatedRequest,
+    res: express.Response
+  ) => {
+    if (!isValidMongoID(req.body.eventId)) {
+      return sendError(res, [`Invalid event ID: ${req.body.eventId}`]);
+    }
+    const payload = await this.events.deleteOneEvent(
+      req.body.eventId,
+      req.AUTHENTICATED_USER_ID
+    );
+    return res.status(getStatus(payload)).json({
+      message: "Attempted to delete one event",
+      payload
+    });
+  };
 
   private handleReindex = async (
     req: IAuthenticatedRequest,
-    res: express.Response,
+    res: express.Response
   ) => {
     if (req.body.password !== process.env.NODE_SECRET) {
       return sendError(res, ["Something went wrong."]);
@@ -109,9 +128,10 @@ class PureEventsRouter extends PureRouter {
     const payload = await this.events.reindexAllEvents();
     return res.json({
       message: "Attempted full reindex of all events and users",
-      payload,
+      payload
     });
-  }
+  };
 }
 
-export const EventRouters = (db: mongo.Db): express.Router => new PureEventsRouter(db).router;
+export const EventRouters = (db: mongo.Db): express.Router =>
+  new PureEventsRouter(db).router;
