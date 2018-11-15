@@ -185,7 +185,8 @@ export class UserDatabase {
       }
     });
     return {
-      message: `Successfully added ${addUser.name} to your graph.`
+      message: `Successfully added ${addUser.name} to your graph.`,
+      user: fullSanitizeUser(addUser)
     };
   }
 
