@@ -116,6 +116,7 @@ class PureUsersRouter extends PureRouter {
     this.router.post("/getMany", verifyToken, this.handleGetManyUsers);
     this.router.put("/update", verifyToken, this.handleUpdateUser);
     this.router.put("/update-other", verifyToken, this.handleUpdateOtherUser);
+    this.router.post("/add-connection", verifyToken, this.handleAddConnection);
     this.router.post(
       "/remove-connection",
       verifyToken,
@@ -214,6 +215,23 @@ class PureUsersRouter extends PureRouter {
     );
     return res.status(getStatus(payload)).json({
       message: "Attempted to update other user.",
+      payload
+    });
+  };
+
+  private handleAddConnection = async (
+    req: IAuthenticatedRequest,
+    res: express.Response
+  ) => {
+    if (!isValidPhoneNumber(req.body.phoneNumber)) {
+      return sendError(res, [`Invalid phone number: ${req.body.phoneNumber}`]);
+    }
+    const payload = await this.user.addConnectionToGraph(
+      req.AUTHENTICATED_USER_ID,
+      req.body.phoneNumber
+    );
+    return res.status(getStatus(payload)).json({
+      message: "Attempted to add to graph.",
       payload
     });
   };

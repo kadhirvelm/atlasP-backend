@@ -347,4 +347,57 @@ describe("Users", () => {
       "We cannot update a claimed user's account details."
     );
   });
+
+  it("allows a user to add another through their phone number", async () => {
+    mongoMock.setAuthenticationToken(
+      generateAuthenticationToken(new mongo.ObjectId(userIds[0]))
+    );
+    const createdUser = await mongoMock.sendRequest(
+      IRequestTypes.POST,
+      "/users/new",
+      {
+        gender: "X",
+        location: "SF",
+        name: "Add me!",
+        // Note: This is a fake number
+        phoneNumber: "2025550191"
+      }
+    );
+    const addUserToGraph = await mongoMock.sendRequest(
+      IRequestTypes.POST,
+      "/users/add-connection",
+      {
+        phoneNumber: "2025550191"
+      }
+    );
+    expect(addUserToGraph.body.payload.message).to.equal(
+      "Successfully added Add me! to your graph."
+    );
+    const getUser = await mongoMock.sendRequest(
+      IRequestTypes.POST,
+      "/users/getOne",
+      {
+        id: userIds[0]
+      }
+    );
+    expect(
+      getUser.body.payload[0].connections[createdUser.body.payload._id]
+    ).to.have.length(0);
+
+    mongoMock.setAuthenticationToken(
+      generateAuthenticationToken(
+        new mongo.ObjectId(createdUser.body.payload._id)
+      )
+    );
+    const getUser2 = await mongoMock.sendRequest(
+      IRequestTypes.POST,
+      "/users/getOne",
+      {
+        id: createdUser.body.payload._id
+      }
+    );
+    assert.deepEqual(getUser2.body.payload[0].connections, {
+      [userIds[0]]: []
+    });
+  });
 });
