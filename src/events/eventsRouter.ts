@@ -31,7 +31,7 @@ class PureEventsRouter extends PureRouter {
     this.router.put("/update", verifyToken, this.handleUpdateEvent);
     this.router.post("/getOne", verifyToken, this.handleGetOneEvent);
     this.router.post("/getMany", verifyToken, this.handleGetManyEvents);
-    this.router.delete("/delete", verifyToken, this.handleDeleteEvent);
+    this.router.post("/delete", verifyToken, this.handleDeleteEvent);
     this.router.get("/reindex", verifyToken, this.handleReindex);
   }
 
