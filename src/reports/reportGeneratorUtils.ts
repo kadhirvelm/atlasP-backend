@@ -7,9 +7,11 @@ export const REMIND_ON_INACTIVE_DAY_COUNT = 30;
 
 export const convertToMongoId = (id: string) => new mongo.ObjectId(id);
 
-export const extractUsers = (event: any) => event.attendees.map(convertToMongoId);
+export const extractUsers = (event: any) =>
+  event.attendees.map(convertToMongoId);
 
-export const renderSingleAttendee = (userID: string, allUsers: any) => `${allUsers[userID].name}, +1${allUsers[userID].phoneNumber}`;
+export const renderSingleAttendee = (userID: string, allUsers: any) =>
+  allUsers[userID].name;
 
 export function getRawUsers(database: mongo.Db, ...events: IFullEvent[][]) {
   return database
@@ -19,8 +21,8 @@ export function getRawUsers(database: mongo.Db, ...events: IFullEvent[][]) {
         $in: events
           .reduce(flatten, [])
           .map(extractUsers)
-          .reduce(flatten, []),
-      },
+          .reduce(flatten, [])
+      }
     })
     .toArray();
 }
@@ -32,8 +34,8 @@ export function incrementDate(date: Date, days: number) {
 
 export function differenceBetweenMongoIdDates(idA: string, idB: string) {
   return (
-    new mongo.ObjectId(idA).getTimestamp().getTime()
-    - new mongo.ObjectId(idB).getTimestamp().getTime()
+    new mongo.ObjectId(idA).getTimestamp().getTime() -
+    new mongo.ObjectId(idB).getTimestamp().getTime()
   );
 }
 
@@ -46,11 +48,11 @@ export function createSingleEventString(event: any, allUsers: any) {
   return `
         <div>
             ${event.description},${new Date(
-  event.date,
-).toLocaleDateString()}, ${event._id},
+    event.date
+  ).toLocaleDateString()}, ${event._id},
             ${event.attendees
-    .map((user: any) => renderSingleAttendee(user, allUsers))
-    .join(",")}
+              .map((user: any) => renderSingleAttendee(user, allUsers))
+              .join(",")}
         </div>
     `;
 }
@@ -64,13 +66,13 @@ export function getLatestEvent(events: IFullEvent[]) {
 export function getLatestEventOnCreation(events: IFullEvent[]) {
   return events
     .sort(
-      (a, b) => a._id.getTimestamp().getTime() - b._id.getTimestamp().getTime(),
+      (a, b) => a._id.getTimestamp().getTime() - b._id.getTimestamp().getTime()
     )
     .slice(-1)[0];
 }
 
 export async function getAllClaimedUsers(
-  database: mongo.Db,
+  database: mongo.Db
 ): Promise<IFullUser[]> {
   return database
     .collection(USERS_COLLECTION)
@@ -80,10 +82,10 @@ export async function getAllClaimedUsers(
 
 export async function getAllLastEvents(
   allClaimedUsers: any[],
-  database: mongo.Db,
+  database: mongo.Db
 ): Promise<IFullEvent[]> {
   const allLastEventsOfClaimedUsers = allClaimedUsers
-    .map((user) => user.connections[user._id])
+    .map(user => user.connections[user._id])
     .reduce(flatten);
   return database
     .collection(EVENTS_COLLECTION)
@@ -93,28 +95,30 @@ export async function getAllLastEvents(
 
 export function getAllUserEventsMapped(
   allLastEventsFetched: IFullEvent[],
-  user: IFullUser,
+  user: IFullUser
 ): IFullEvent[] | undefined {
   const allUserEvents = user.connections[user._id.toHexString()];
   if (allUserEvents === undefined || allUserEvents.length === 0) {
     return undefined;
   }
 
-  return allUserEvents.map((eventId) => allLastEventsFetched.find(
-    (event) => event._id.toString() === eventId.toString(),
-  ));
+  return allUserEvents.map(eventId =>
+    allLastEventsFetched.find(
+      event => event._id.toString() === eventId.toString()
+    )
+  );
 }
 
 export function getMinimumDaysSince(allUsersEventsMapped: IFullEvent[]) {
   const daysSinceLastEventCreation = differenceBetweenDates(
     new Date(),
     new mongo.ObjectId(
-      getLatestEventOnCreation(allUsersEventsMapped)._id,
-    ).getTimestamp(),
+      getLatestEventOnCreation(allUsersEventsMapped)._id
+    ).getTimestamp()
   );
   const daysSinceLastEvent = differenceBetweenDates(
     new Date(),
-    getLatestEvent(allUsersEventsMapped).date,
+    getLatestEvent(allUsersEventsMapped).date
   );
   return Math.min(daysSinceLastEventCreation, daysSinceLastEvent);
 }
