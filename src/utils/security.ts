@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import mongo from "mongodb";
 
 const ONE_DAY = 60 * 60 * 24;
-const TOKEN_EXPIRATION_TIME = ONE_DAY * 2;
+const TOKEN_EXPIRATION_TIME = ONE_DAY * 14;
 
 export interface IAuthenticatedRequest extends express.Request {
   AUTHENTICATED_USER_ID?: mongo.ObjectId;
@@ -32,7 +32,7 @@ export function hashPassword(password: string | undefined) {
 
 export function generateAuthenticationToken(userID: mongo.ObjectId) {
   return jwt.sign({ id: userID }, process.env.NODE_SECRET, {
-    expiresIn: TOKEN_EXPIRATION_TIME,
+    expiresIn: TOKEN_EXPIRATION_TIME
   });
 }
 
@@ -48,14 +48,14 @@ export function decodeAuthenticationToken(token: string) {
 export function verifyToken(
   req: IAuthenticatedRequest,
   res: express.Response,
-  next: express.NextFunction,
+  next: express.NextFunction
 ) {
   const userID = decodeAuthenticationToken(req.headers[
     "access-token"
   ] as string);
   if (userID === undefined) {
     return res.status(401).json({
-      error: "Authentication token expired, incorrect, or not present.",
+      error: "Authentication token expired, incorrect, or not present."
     });
   }
   req.AUTHENTICATED_USER_ID = userID;
