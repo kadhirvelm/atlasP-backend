@@ -65,7 +65,8 @@ class PureEventsRouter extends PureRouter {
     delete req.body.eventId;
     const payload = await this.events.updateEvent(
       new mongo.ObjectId(eventId),
-      req.body as IRawEvent
+      req.body as IRawEvent,
+      req.AUTHENTICATED_USER_ID
     );
     return res.json({
       message: "Attempted to update event",

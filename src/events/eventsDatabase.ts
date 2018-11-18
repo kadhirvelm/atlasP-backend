@@ -28,7 +28,11 @@ export class EventDatabase {
     });
   }
 
-  public async updateEvent(eventId: mongo.ObjectId, event: IRawEvent) {
+  public async updateEvent(
+    eventId: mongo.ObjectId,
+    event: IRawEvent,
+    userId: mongo.ObjectId
+  ) {
     return handleError(async () => {
       const originalEvent = await this.getOneEvent(eventId.toHexString());
       await this.userDatabase.removeIndexUserEvents(eventId, originalEvent);
@@ -39,7 +43,11 @@ export class EventDatabase {
         .replaceOne({ _id: eventId }, finalEvent);
 
       await this.userDatabase.indexUserEvents(finalEvent.attendees, eventId);
-      return newEvent.result;
+      const updatedUser = await this.userDatabase.getUser(
+        userId.toHexString(),
+        false
+      );
+      return { ...newEvent.result, updatedUser };
     });
   }
 
@@ -67,9 +75,11 @@ export class EventDatabase {
         originalEvent
       );
 
-      return await this.db
+      await this.db
         .collection(EVENTS_COLLECTION)
         .deleteOne({ _id: mongoEventId });
+
+      return this.userDatabase.getUser(userId.toHexString(), false);
     });
   }
 

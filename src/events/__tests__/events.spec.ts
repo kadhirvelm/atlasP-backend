@@ -94,7 +94,8 @@ describe("Events", () => {
       assert.deepEqual(secondUpdate.body.payload, {
         n: 1,
         nModified: 1,
-        ok: 1
+        ok: 1,
+        updatedUser: []
       });
 
       const fetchEventResponse = await mongoMock.sendRequest(
@@ -148,7 +149,8 @@ describe("Events", () => {
       assert.deepEqual(secondUpdate.body.payload, {
         n: 1,
         nModified: 1,
-        ok: 1
+        ok: 1,
+        updatedUser: []
       });
 
       const fetchEventResponse = await mongoMock.sendRequest(
@@ -314,11 +316,7 @@ describe("Events", () => {
           eventId: thirdEvent
         }
       );
-      assert.deepEqual(updateRequest.body.payload, {
-        n: 1,
-        nModified: 1,
-        ok: 1
-      });
+      expect(updateRequest.body.payload).to.not.equal(undefined);
 
       const secondGetUsers = await mongoMock.sendRequest(
         IRequestTypes.POST,
@@ -380,11 +378,7 @@ describe("Events", () => {
           eventId: fourthEvent
         }
       );
-      assert.deepEqual(updateRequest.body.payload, {
-        n: 1,
-        nModified: 1,
-        ok: 1
-      });
+      expect(updateRequest.body.payload).to.not.equal(undefined);
 
       const secondGetUsers = await mongoMock.sendRequest(
         IRequestTypes.POST,
@@ -441,10 +435,7 @@ describe("Events", () => {
           eventId: createEventResponse.body.payload.id
         }
       );
-      assert.deepEqual(deleteEventResponse.body.payload, {
-        n: 1,
-        ok: 1
-      });
+      expect(deleteEventResponse.body.payload).to.not.equal(undefined);
       const getEvent = await mongoMock.sendRequest(
         IRequestTypes.POST,
         "/events/getOne",
