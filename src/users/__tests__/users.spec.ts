@@ -6,7 +6,8 @@ import { generateAuthenticationToken } from "../../utils";
 import { IRequestTypes, MongoMock } from "../../utils/__tests__/generalUtils";
 import {
   convertToMongoObjectId,
-  DEFAULT_MONGOID
+  DEFAULT_MONGOID,
+  FAKE_PHONE_NUMBERS
 } from "../../utils/__tests__/usersUtils";
 
 describe("Users", () => {
@@ -34,7 +35,7 @@ describe("Users", () => {
         location: "SF",
         name: "Bob A",
         // Note: This is a fake number
-        phoneNumber: "2025550170"
+        phoneNumber: FAKE_PHONE_NUMBERS[0]
       }
     );
     userIds.push(createUser.body.payload.newUserId);
@@ -59,7 +60,7 @@ describe("Users", () => {
       gender: "X",
       location: "SF",
       name: "Bob A",
-      phoneNumber: "2025550170"
+      phoneNumber: FAKE_PHONE_NUMBERS[0]
     });
   });
 
@@ -68,7 +69,7 @@ describe("Users", () => {
       IRequestTypes.POST,
       "/users/claim",
       {
-        phoneNumber: "2025550170"
+        phoneNumber: FAKE_PHONE_NUMBERS[0]
       }
     );
     expect(claimUser.body.payload.temporaryPassword).to.not.equal(undefined);
@@ -106,7 +107,7 @@ describe("Users", () => {
         location: "SF",
         name: "Joe B",
         // Note: This is a fake number
-        phoneNumber: "2025550158"
+        phoneNumber: FAKE_PHONE_NUMBERS[1]
       }
     );
     userIds.push(createUser2.body.payload.newUserId);
@@ -118,7 +119,7 @@ describe("Users", () => {
         location: "SF",
         name: "Calvin C",
         // Note: This is a fake number
-        phoneNumber: "2025550123"
+        phoneNumber: FAKE_PHONE_NUMBERS[2]
       }
     );
     userIds.push(createUser3.body.payload.newUserId);
@@ -206,7 +207,7 @@ describe("Users", () => {
       "/users/login",
       {
         password: "TEST_PASSWORD_1",
-        phoneNumber: "2025550170"
+        phoneNumber: FAKE_PHONE_NUMBERS[0]
       }
     );
     expect(login.body.payload).to.not.equal(undefined);
@@ -234,7 +235,7 @@ describe("Users", () => {
       "/users/login",
       {
         password: "TEST_PASSWORD_1",
-        phoneNumber: "2025550170"
+        phoneNumber: FAKE_PHONE_NUMBERS[0]
       }
     );
     expect(login2.body.payload.token).to.not.equal(undefined);
@@ -249,7 +250,7 @@ describe("Users", () => {
         ignoreUsers: [userIds[1]],
         location: "SF",
         name: "Bob A",
-        phoneNumber: "2025550170"
+        phoneNumber: FAKE_PHONE_NUMBERS[0]
       }
     );
     assert.deepEqual(response.body.payload, {
@@ -273,7 +274,7 @@ describe("Users", () => {
       IRequestTypes.POST,
       "/users/claim",
       {
-        phoneNumber: "2025550170"
+        phoneNumber: FAKE_PHONE_NUMBERS[0]
       }
     );
     expect(claim1.body.payload.error).to.equal(
@@ -283,7 +284,7 @@ describe("Users", () => {
       IRequestTypes.POST,
       "/users/reset",
       {
-        phoneNumber: "2025550170"
+        phoneNumber: FAKE_PHONE_NUMBERS[0]
       }
     );
     expect(reset.body.payload.message).to.equal(
@@ -293,7 +294,7 @@ describe("Users", () => {
       IRequestTypes.POST,
       "/users/claim",
       {
-        phoneNumber: "2025550170"
+        phoneNumber: FAKE_PHONE_NUMBERS[0]
       }
     );
     expect(claim2.body.payload.temporaryPassword).to.not.equal(undefined);
@@ -356,14 +357,14 @@ describe("Users", () => {
         location: "SF",
         name: "Add me!",
         // Note: This is a fake number
-        phoneNumber: "2025550191"
+        phoneNumber: FAKE_PHONE_NUMBERS[3]
       }
     );
     const addUserToGraph = await mongoMock.sendRequest(
       IRequestTypes.POST,
       "/users/add-connection",
       {
-        phoneNumber: "2025550191"
+        phoneNumber: FAKE_PHONE_NUMBERS[3]
       }
     );
     expect(addUserToGraph.body.payload.message).to.equal(

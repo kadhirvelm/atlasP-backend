@@ -1,25 +1,24 @@
 import mongo from "mongodb";
 
-import {
-  IFullUser,
-  IUser,
-  IUserConnections,
-  USERS_COLLECTION
-} from "./userConstants";
+import { IFullUser, IUser, USERS_COLLECTION } from "./userConstants";
 
 import { IEvent } from "../events";
 import {
   fullSanitizeUser,
   handleError,
   hashPassword,
-  isValidStringID,
   parseIntoObjectIDs,
   sanitizePhoneNumber,
   sanitizeUser
 } from "../utils";
+import { UserDatabaseUtils } from "./usersDatabaseUtils";
 
 export class UserDatabase {
-  constructor(private db: mongo.Db) {}
+  private userDatabaseUtils: UserDatabaseUtils;
+
+  constructor(private db: mongo.Db) {
+    this.userDatabaseUtils = new UserDatabaseUtils(db);
+  }
 
   /**
    * Public routes
@@ -40,7 +39,9 @@ export class UserDatabase {
   }
 
   public async claim(phoneNumber: string) {
-    const user = await this.retrieveUserWithPhoneNumber(phoneNumber);
+    const user = await this.userDatabaseUtils.retrieveUserWithPhoneNumber(
+      phoneNumber
+    );
     if (user == null || user.claimed) {
       return {
         error:
@@ -63,7 +64,9 @@ export class UserDatabase {
     password: string,
     temporaryPassword?: number
   ) {
-    const user = await this.retrieveUserWithPhoneNumber(phoneNumber);
+    const user = await this.userDatabaseUtils.retrieveUserWithPhoneNumber(
+      phoneNumber
+    );
     if (
       user == null ||
       (temporaryPassword !== undefined &&
@@ -76,7 +79,9 @@ export class UserDatabase {
   }
 
   public async resetClaimed(phoneNumber: string) {
-    const user = await this.retrieveUserWithPhoneNumber(phoneNumber);
+    const user = await this.userDatabaseUtils.retrieveUserWithPhoneNumber(
+      phoneNumber
+    );
     if (user == null) {
       return;
     }
@@ -100,21 +105,21 @@ export class UserDatabase {
    * Authenticated routes
    */
 
-  public async getUser(id: string, shouldFullySanitize: boolean = true) {
+  public async getUser(id: string, shouldFullySanitize = true) {
     return this.getManyUsers([id], shouldFullySanitize);
   }
 
   public async getManyUsers(
-    ids: string[] | mongo.ObjectId[],
-    sanitize: boolean = true
+    ids: string[],
+    shouldFullySanitize: boolean = true
   ): Promise<IFullUser[]> {
     return handleError(async () => {
-      const finalIds = isValidStringID(ids) ? parseIntoObjectIDs(ids) : ids;
+      const finalIds = parseIntoObjectIDs(ids);
       const allUsers = await this.db
         .collection(USERS_COLLECTION)
         .find({ _id: { $in: finalIds } });
       const finalUsers = (await allUsers.toArray()) as IFullUser[];
-      return sanitize
+      return shouldFullySanitize
         ? finalUsers.map(fullSanitizeUser)
         : finalUsers.map(user => sanitizeUser(user).userDetails);
     });
@@ -124,7 +129,7 @@ export class UserDatabase {
     userID: mongo.ObjectId,
     newUserDetails: Partial<IFullUser>
   ) {
-    const user = await this.retrieveUserWithID(userID);
+    const user = await this.userDatabaseUtils.retrieveUserWithID(userID);
     const newDetails = { ...newUserDetails };
     if (newDetails.password !== undefined) {
       newDetails.password = hashPassword(newDetails.password);
@@ -145,7 +150,9 @@ export class UserDatabase {
     userId: string,
     newUserDetails: Partial<IFullUser>
   ) {
-    const user = await this.retrieveUserWithID(new mongo.ObjectId(userId));
+    const user = await this.userDatabaseUtils.retrieveUserWithID(
+      new mongo.ObjectId(userId)
+    );
     if (user.claimed === true && !user._id.equals(currentUserId)) {
       return {
         error: "We cannot update a claimed user's account details."
@@ -158,14 +165,16 @@ export class UserDatabase {
     userID: mongo.ObjectId,
     phoneNumber: string
   ) {
-    const addUser = await this.retrieveUserWithPhoneNumber(phoneNumber);
+    const addUser = await this.userDatabaseUtils.retrieveUserWithPhoneNumber(
+      phoneNumber
+    );
     if (addUser == null) {
       return {
         error: `Hum, we can't seem to find anyone with the number: ${phoneNumber}`
       };
     }
 
-    const currentUser = await this.retrieveUserWithID(userID);
+    const currentUser = await this.userDatabaseUtils.retrieveUserWithID(userID);
     if (currentUser.connections[addUser._id.toHexString()] !== undefined) {
       return {
         error: `You already have ${addUser.name} on your graph.`
@@ -194,7 +203,7 @@ export class UserDatabase {
     userID: mongo.ObjectId,
     removeConnectionId: string
   ) {
-    const user = await this.retrieveUserWithID(userID);
+    const user = await this.userDatabaseUtils.retrieveUserWithID(userID);
     const userConnectionCopy = { ...user.connections };
     if (userConnectionCopy[removeConnectionId] === undefined) {
       throw new Error("Cannot remove a non-empty connection.");
@@ -210,121 +219,21 @@ export class UserDatabase {
     userIds: mongo.ObjectId[],
     eventId?: mongo.ObjectId
   ) {
-    return this.changeUserIndex(userIds, eventId, this.appendConnection);
+    return this.userDatabaseUtils.changeUserIndex(
+      userIds,
+      eventId,
+      this.userDatabaseUtils.appendConnection
+    );
   }
 
   public async removeIndexUserEvents(
     eventId: mongo.ObjectId,
     originalEvent: IEvent
   ) {
-    return this.changeUserIndex(
+    return this.userDatabaseUtils.changeUserIndex(
       originalEvent.attendees,
       eventId,
-      this.removeConnection
+      this.userDatabaseUtils.removeConnection
     );
   }
-
-  /**
-   * Utils
-   */
-
-  private retrieveUserWithPhoneNumber(
-    phoneNumber: string
-  ): Promise<IFullUser | null> {
-    return this.fetchUser({ phoneNumber: sanitizePhoneNumber(phoneNumber) });
-  }
-
-  private retrieveUserWithID(id: mongo.ObjectId): Promise<IFullUser | null> {
-    return this.fetchUser({ _id: id });
-  }
-
-  private async fetchUser(query: any): Promise<IFullUser | null> {
-    const fetchUser = await this.db.collection(USERS_COLLECTION).find(query);
-    return fetchUser.next();
-  }
-
-  private async changeUserIndex(
-    userIds: mongo.ObjectId[],
-    eventId: mongo.ObjectId,
-    mapping: (
-      singleUserConnections: IUserConnections,
-      appendIds: mongo.ObjectId[],
-      eventId: mongo.ObjectId,
-      singleUser?: IFullUser,
-      allUsers?: IFullUser[]
-    ) => IUserConnections
-  ) {
-    const allUsers = await this.getManyUsers(userIds, false);
-    const usersWithConnections = allUsers.map((singleUser: IFullUser) => ({
-      connections: mapping(
-        singleUser.connections,
-        userIds,
-        eventId,
-        singleUser,
-        allUsers
-      ),
-      id: singleUser._id
-    }));
-    for (const singleUser of usersWithConnections) {
-      await this.db
-        .collection(USERS_COLLECTION)
-        .updateOne(
-          { _id: singleUser.id },
-          { $set: { connections: singleUser.connections } }
-        );
-    }
-    return { message: "Successfully reindexed connection" };
-  }
-
-  private appendConnection = (
-    singleUserConnections: IUserConnections,
-    appendIds: mongo.ObjectId[],
-    eventId?: mongo.ObjectId
-  ) => {
-    const copyUserConnections = { ...singleUserConnections } || {};
-    appendIds.forEach(id => {
-      const finalEventId = eventId === undefined ? [] : [eventId];
-      const currentConnections = copyUserConnections[id.toHexString()] || [];
-      if (!currentConnections.includes(finalEventId[0])) {
-        copyUserConnections[id.toHexString()] = currentConnections.concat(
-          finalEventId
-        );
-      }
-    });
-    return copyUserConnections;
-  };
-
-  private removeConnection = (
-    singleUserConnections: IUserConnections,
-    removeIds: mongo.ObjectId[],
-    eventId: mongo.ObjectId,
-    singleUser: IFullUser,
-    allUsers: IFullUser[]
-  ) => {
-    const copyUserConnections = { ...singleUserConnections };
-    if (copyUserConnections === undefined) {
-      return copyUserConnections;
-    }
-    removeIds.forEach(id => {
-      const currentConnections = copyUserConnections[id.toHexString()] || [];
-      const connectionIndex = currentConnections.findIndex(connection =>
-        connection.equals(eventId)
-      );
-      if (connectionIndex !== -1) {
-        currentConnections.splice(connectionIndex, 1);
-        if (
-          currentConnections.length === 0 &&
-          !id.equals(singleUser._id) &&
-          !id.equals(singleUser.createdBy) &&
-          !singleUser._id.equals(
-            allUsers.find(user => user._id.equals(id)).createdBy
-          )
-        ) {
-          // Note: delete strangers from your graph
-          delete copyUserConnections[id.toHexString()];
-        }
-      }
-    });
-    return copyUserConnections;
-  };
 }

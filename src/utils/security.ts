@@ -36,6 +36,12 @@ export function generateAuthenticationToken(userID: mongo.ObjectId) {
   });
 }
 
+export function generatePasswordToken(password: string) {
+  return jwt.sign({ id: password }, process.env.NODE_SECRET, {
+    expiresIn: 60 * 10
+  });
+}
+
 export function decodeAuthenticationToken(token: string) {
   try {
     const jtwOutput = jwt.verify(token, process.env.NODE_SECRET) as IJWTOutput;
@@ -59,5 +65,23 @@ export function verifyToken(
     });
   }
   req.AUTHENTICATED_USER_ID = userID;
+  return next();
+}
+
+export function verifyPassword(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  const atlasPassword = jwt.verify(
+    req.headers["access-token"] as string,
+    process.env.NODE_SECRET
+  ) as IJWTOutput;
+  if (atlasPassword.id !== process.env.PREMIUM_PASSWORD) {
+    return res.status(401).json({
+      error:
+        "Something went wrong with your request, please contact an administrator."
+    });
+  }
   return next();
 }
