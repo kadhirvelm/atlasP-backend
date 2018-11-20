@@ -7,8 +7,7 @@ import {
   isString,
   isValidMongoID,
   isValidMongoIDArray,
-  isValidPhoneNumber,
-  isValidStringArray
+  isValidPhoneNumber
 } from "../utils";
 import { requiredUserKeys, validGenders } from "./userConstants";
 

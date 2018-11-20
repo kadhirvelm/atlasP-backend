@@ -1,34 +1,35 @@
 version: "2"
 services:
-    atlasp:
-        build: .
-        restart: always
-        container_name: atlasp_server
-        image: debian/latest
-        volumes:
-            - .:/var/www:rw
-        ports:
-            - 3001:3001
-        links:
-            - mongodb
-        depends_on:
-            - mongodb
-        environment:
-            - CLIENT_ID
-            - CLIENT_SECRET
-            - CLIENT_GMAIL_SECRET
-            - NODE_ENV
-            - NODE_SECRET
-            - PORT
-            - REDIRECT_URI
-            - REACT_APP_SPREADSHEET
-    mongodb:
-      restart: always
-      container_name: atlasp_database
-      image: mongo
-      ports:
-        - 27017:27017
-      volumes:
-        - data:/data/db
+  atlasp:
+    build: .
+    restart: always
+    container_name: atlasp_server
+    image: debian/latest
+    volumes:
+      - .:/var/www:rw
+    ports:
+      - 3001:3001
+    links:
+      - mongodb
+    depends_on:
+      - mongodb
+    environment:
+      - CLIENT_ID
+      - CLIENT_SECRET
+      - CLIENT_GMAIL_SECRET
+      - NODE_ENV
+      - NODE_SECRET
+      - PREMIUM_PASSWORD
+      - PORT
+      - REDIRECT_URI
+      - REACT_APP_SPREADSHEET
+  mongodb:
+    restart: always
+    container_name: atlasp_database
+    image: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - data:/data/db
 volumes:
-  data:
+  ? data
