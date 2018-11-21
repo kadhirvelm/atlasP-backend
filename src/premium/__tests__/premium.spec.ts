@@ -13,7 +13,7 @@ import {
   FAKE_PHONE_NUMBERS
 } from "../../utils/__tests__/usersUtils";
 
-describe.only("Premium", () => {
+describe("Premium", () => {
   let mongoMock: MongoMock;
   const userIds: string[] = [];
 

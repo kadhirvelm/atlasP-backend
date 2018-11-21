@@ -15,7 +15,6 @@ export interface IFullUser extends IUser {
   claimed: boolean;
   connections?: IUserConnections;
   createdBy?: mongo.ObjectId;
-  ignoreUsers?: string[];
   password: string;
   temporaryPassword: number;
 }
@@ -26,6 +25,6 @@ export const requiredUserKeys = [
   "name",
   "password",
   "phoneNumber",
-  "temporaryPassword",
+  "temporaryPassword"
 ];
 export const USERS_COLLECTION = "USERS";

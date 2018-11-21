@@ -6,6 +6,10 @@ import { EventRouters, EVENTS_ROOT } from "./events/eventsRouter";
 import { GENERAL_ROOT, GeneralRoutes } from "./general/generalRouter";
 import { GOOGLE_ROOT, GoogleRoutes } from "./google/googleRouter";
 import { PREMIUM_ROOT, PremiumRoutes } from "./premium/premiumRouter";
+import {
+  RelationshipRoutes,
+  RELATIONSHIPS_ROOT
+} from "./relationships/relationshipsRouter";
 import { REPORT_ROOT, ReporterRoutes } from "./reports/reporter";
 import { USERS_ROOT, UsersRoutes } from "./users/userRouter";
 
@@ -50,6 +54,7 @@ export class PureApp {
     this.app.use(GENERAL_ROOT, GeneralRoutes);
     this.app.use(EVENTS_ROOT, EventRouters(this.database));
     this.app.use(USERS_ROOT, UsersRoutes(this.database));
+    this.app.use(RELATIONSHIPS_ROOT, RelationshipRoutes(this.database));
     this.app.use(PREMIUM_ROOT, PremiumRoutes(this.database));
     this.app.use(GOOGLE_ROOT, GoogleRoutes(this.database));
     this.app.use(REPORT_ROOT, ReporterRoutes(this.database));

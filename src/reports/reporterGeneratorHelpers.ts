@@ -2,12 +2,14 @@ import axios from "axios";
 import mongo from "mongodb";
 
 import { EVENTS_COLLECTION, IFullEvent } from "../events";
+import { IRelationship } from "../relationships";
 import { IFullUser } from "../users";
-import { fullSanitizeUser } from "../utils";
+import { convertArrayToMap, fullSanitizeUser } from "../utils";
 import {
   createSingleEventString,
   getAllClaimedUsers,
   getAllLastEvents,
+  getAllRelationships,
   getAllUserEventsMapped,
   getMinimumDaysSince,
   getRawUsers,
@@ -19,6 +21,7 @@ export interface ICategorizedUser {
   allUsersEventsMapped: IFullEvent[];
   isInactive: boolean;
   message: string;
+  relationships?: IRelationship;
   user: IFullUser;
 }
 
@@ -67,25 +70,31 @@ export async function getCategorizedUsers(
     allClaimedUsers,
     database
   );
-  const allCategorizedUsers = allClaimedUsers.map(user => {
-    const allUsersEventsMapped = getAllUserEventsMapped(
-      allLastEventsFetched,
-      user
-    );
-    if (allUsersEventsMapped === undefined) {
-      return undefined;
-    }
+  const allRelationships = convertArrayToMap(
+    await getAllRelationships(allClaimedUsers.map(user => user._id), database)
+  );
+  const allCategorizedUsers = allClaimedUsers
+    .map(user => {
+      const allUsersEventsMapped = getAllUserEventsMapped(
+        allLastEventsFetched,
+        user
+      );
+      if (allUsersEventsMapped === undefined) {
+        return undefined;
+      }
 
-    const daysSinceLastEvent = getMinimumDaysSince(allUsersEventsMapped);
-    return {
-      allUsersEventsMapped,
-      isInactive: daysSinceLastEvent > REMIND_ON_INACTIVE_DAY_COUNT,
-      message: `${user.name},${daysSinceLastEvent} days,+1${
-        user.phoneNumber
-      }\n`,
-      user
-    };
-  });
+      const daysSinceLastEvent = getMinimumDaysSince(allUsersEventsMapped);
+      return {
+        allUsersEventsMapped,
+        isInactive: daysSinceLastEvent > REMIND_ON_INACTIVE_DAY_COUNT,
+        message: `${user.name},${daysSinceLastEvent} days,+1${
+          user.phoneNumber
+        }\n`,
+        relationships: allRelationships.get(user._id.toHexString()),
+        user
+      };
+    })
+    .filter(user => user !== undefined);
 
   return allCategorizedUsers;
 }

@@ -13,7 +13,7 @@ import { PremiumDatabase } from "./premiumDatabase";
 
 export const PREMIUM_ROOT = "/premium";
 
-export class PurePremiumRouter extends PureRouter {
+class PurePremiumRouter extends PureRouter {
   private premium: PremiumDatabase;
 
   constructor(db: mongo.Db) {
