@@ -27,6 +27,13 @@
 | GET  | /check   | returns the current authenticated user's premium status      | Yes         |
 | POST | /upgrade | allows an admin user to increase a user's premium expiration | Yes         |
 
+### /relationships
+
+| REST | Route   | Action                               | Implemented |
+| ---- | ------- | ------------------------------------ | ----------- |
+| GET  | /all    | returns all relationships a user has | Yes         |
+| POST | /update | updates a user's relationships       | Yes         |
+
 ### /events
 
 | REST   | Route    | Action                                                       | Implemented |
