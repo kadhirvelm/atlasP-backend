@@ -34,7 +34,6 @@ describe("Users", () => {
         gender: "X",
         location: "SF",
         name: "Bob A",
-        // Note: This is a fake number
         phoneNumber: FAKE_PHONE_NUMBERS[0]
       }
     );
@@ -106,7 +105,6 @@ describe("Users", () => {
         gender: "X",
         location: "SF",
         name: "Joe B",
-        // Note: This is a fake number
         phoneNumber: FAKE_PHONE_NUMBERS[1]
       }
     );
@@ -118,7 +116,6 @@ describe("Users", () => {
         gender: "X",
         location: "SF",
         name: "Calvin C",
-        // Note: This is a fake number
         phoneNumber: FAKE_PHONE_NUMBERS[2]
       }
     );
@@ -241,34 +238,6 @@ describe("Users", () => {
     expect(login2.body.payload.token).to.not.equal(undefined);
   });
 
-  it("allows a user to an another to their ignore list", async () => {
-    const response = await mongoMock.sendRequest(
-      IRequestTypes.PUT,
-      "/users/update",
-      {
-        gender: "X",
-        ignoreUsers: [userIds[1]],
-        location: "SF",
-        name: "Bob A",
-        phoneNumber: FAKE_PHONE_NUMBERS[0]
-      }
-    );
-    assert.deepEqual(response.body.payload, {
-      n: 1,
-      nModified: 1,
-      ok: 1
-    });
-    const getUser = await mongoMock.sendRequest(
-      IRequestTypes.POST,
-      "/users/getOne",
-      {
-        id: userIds[0]
-      }
-    );
-    expect(getUser.body.payload[0].ignoreUsers).to.have.length(1);
-    expect(getUser.body.payload[0].ignoreUsers[0]).to.equal(userIds[1]);
-  });
-
   it("allows a user to reset their claimed status", async () => {
     const claim1 = await mongoMock.sendRequest(
       IRequestTypes.POST,
@@ -356,7 +325,6 @@ describe("Users", () => {
         gender: "X",
         location: "SF",
         name: "Add me!",
-        // Note: This is a fake number
         phoneNumber: FAKE_PHONE_NUMBERS[3]
       }
     );

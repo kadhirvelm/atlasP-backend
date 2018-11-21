@@ -44,7 +44,6 @@ export function sanitizeUser(
 export function fullSanitizeUser(user: IFullUser) {
   const { userDetails } = sanitizeUser(user, false);
   delete userDetails.connections;
-  delete userDetails.ignoreUsers;
   delete userDetails.createdBy;
   delete userDetails.phoneNumber;
   return userDetails;

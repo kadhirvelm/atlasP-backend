@@ -1,5 +1,6 @@
 import mongo from "mongodb";
 import { EVENTS_COLLECTION, IFullEvent } from "../events";
+import { RELATIONSHIPS_COLLECTION } from "../relationships";
 import { IFullUser, USERS_COLLECTION } from "../users";
 import { flatten } from "../utils";
 
@@ -126,6 +127,13 @@ export function getMinimumDaysSince(allUsersEventsMapped: IFullEvent[]) {
 export function getAllUsersWithIds(ids: mongo.ObjectId[], database: mongo.Db) {
   return database
     .collection(USERS_COLLECTION)
+    .find({ _id: { $in: ids } })
+    .toArray();
+}
+
+export function getAllRelationships(ids: mongo.ObjectID[], database: mongo.Db) {
+  return database
+    .collection(RELATIONSHIPS_COLLECTION)
     .find({ _id: { $in: ids } })
     .toArray();
 }

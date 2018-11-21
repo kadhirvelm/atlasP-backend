@@ -41,15 +41,6 @@ export function validUserBodyChecker(
   ) {
     errorMessages.push(`Phone number is not valid: ${body.phoneNumber}`);
   }
-  if (
-    body.ignoreUsers !== undefined &&
-    !isValidMongoIDArray(body.ignoreUsers) &&
-    checkNeedsToBeDefined(body.ignoreUsers, needsToBeDefined)
-  ) {
-    errorMessages.push(
-      `Ignore users must be an array of valid IDs: ${body.ignoreUsers}`
-    );
-  }
   return errorMessages;
 }
 
@@ -70,15 +61,8 @@ export function isValidUser(body: any) {
   return validUserBodyChecker(body);
 }
 
-export function isValidUserUpdate(body: any, currentUserId: mongo.ObjectId) {
-  const errorMessages = [];
-  if (
-    body.ignoreUsers !== undefined &&
-    body.ignoreUsers.includes(currentUserId.toHexString())
-  ) {
-    errorMessages.push("Cannot ignore yourself.");
-  }
-  return validUserBodyChecker(body, false).concat(errorMessages);
+export function isValidUserUpdate(body: any, currentUserId?: mongo.ObjectId) {
+  return validUserBodyChecker(body, false);
 }
 
 export function isValidLogin(body: any) {
