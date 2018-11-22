@@ -7,8 +7,10 @@ import { IFullUser } from "../users";
 import { convertArrayToMap, fullSanitizeUser } from "../utils";
 import {
   createSingleEventString,
+  differenceBetweenDates,
   getAllClaimedUsers,
   getAllLastEvents,
+  getAllPremiumUsers,
   getAllRelationships,
   getAllUserEventsMapped,
   getMinimumDaysSince,
@@ -20,6 +22,7 @@ import {
 export interface ICategorizedUser {
   allUsersEventsMapped: IFullEvent[];
   isInactive: boolean;
+  isPremium: boolean;
   message: string;
   relationships?: IRelationship;
   user: IFullUser;
@@ -70,9 +73,15 @@ export async function getCategorizedUsers(
     allClaimedUsers,
     database
   );
-  const allRelationships = convertArrayToMap(
-    await getAllRelationships(allClaimedUsers.map(user => user._id), database)
-  );
+
+  const allUserIds = allClaimedUsers.map(user => user._id);
+  const allPromises = await Promise.all([
+    await getAllRelationships(allUserIds, database),
+    await getAllPremiumUsers(allUserIds, database)
+  ]);
+  const allRelationships = convertArrayToMap(allPromises[0]);
+  const allPremiumUsers = convertArrayToMap(allPromises[1]);
+
   const allCategorizedUsers = allClaimedUsers
     .map(user => {
       const allUsersEventsMapped = getAllUserEventsMapped(
@@ -83,10 +92,21 @@ export async function getCategorizedUsers(
         return undefined;
       }
 
+      let isPremium = false;
+      const getPremiumStatus = allPremiumUsers.get(user._id.toHexString());
+      if (getPremiumStatus !== undefined) {
+        isPremium =
+          differenceBetweenDates(
+            new Date(getPremiumStatus.expiration),
+            new Date()
+          ) > 0;
+      }
+
       const daysSinceLastEvent = getMinimumDaysSince(allUsersEventsMapped);
       return {
         allUsersEventsMapped,
         isInactive: daysSinceLastEvent > REMIND_ON_INACTIVE_DAY_COUNT,
+        isPremium,
         message: `${user.name},${daysSinceLastEvent} days,+1${
           user.phoneNumber
         }\n`,
