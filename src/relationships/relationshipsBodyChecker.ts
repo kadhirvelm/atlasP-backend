@@ -12,19 +12,19 @@ export function validRelationshipBodyChecker(body: any) {
     );
   }
   if (
-    body.closeFriends !== undefined &&
-    !isValidMongoIDArray(body.ignoreUsers)
+    body.frequentUsers !== undefined &&
+    !isValidMongoIDArray(body.frequentUsers)
   ) {
     errorMessages.push(
-      `Close friends users must be an array of valid IDs: ${body.closeFriends}`
+      `Close friends users must be an array of valid IDs: ${body.frequentUsers}`
     );
   }
   if (
-    body.familyUsers !== undefined &&
-    !isValidMongoIDArray(body.familyUsers)
+    body.semiFrequentUsers !== undefined &&
+    !isValidMongoIDArray(body.semiFrequentUsers)
   ) {
     errorMessages.push(
-      `Family users must be an array of valid IDs: ${body.ignoreUsers}`
+      `Family users must be an array of valid IDs: ${body.semiFrequentUsers}`
     );
   }
   return errorMessages;

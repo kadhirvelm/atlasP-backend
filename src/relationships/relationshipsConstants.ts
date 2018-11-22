@@ -2,8 +2,8 @@ import mongo from "mongodb";
 
 export interface IRelationship {
   _id: mongo.ObjectId;
-  closeFriendsUsers?: string[];
-  familyUsers?: string[];
+  frequentUsers?: string[];
+  semiFrequentUsers?: string[];
   ignoreUsers?: string[];
 }
 
