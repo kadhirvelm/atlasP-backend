@@ -8,7 +8,6 @@ import {
   convertToMongoId,
   differenceBetweenDates,
   differenceBetweenMongoIdDates,
-  getAllRelationships,
   getAllUsersWithIds,
   getLatestEvent,
   REMIND_ON_INACTIVE_DAY_COUNT
@@ -17,11 +16,40 @@ import {
 const TOTAL_CONNECTIONS_MODIFIER = 1.0;
 const LATEST_EVENT_MODIFIER = 1.2;
 const NEVER_BEFORE_SEEN_FRIEND = -1;
+const FREQUENT_MODIFIER = 16;
+const SEMI_FREQUENT_MODIFIER = 8;
 
 export interface IRecommendation {
   activeUser: IFullUser;
   recommendation: string;
   score: number | string;
+}
+
+/**
+ * Sets an ignore user's score to 0 if they're on the ignore list, multiplies it
+ * by FREQUENT_MODIFIER if a user has been categorized into frequent and by
+ * SEMI_FREQUENT_MODIFIER if a user has been categorized into semi-frequent.
+ */
+function getRelationshipModifier(userId: string, relationships: IRelationship) {
+  const checkRelationship = (
+    trueModifier: number,
+    falseModifier: number,
+    relationship: string[] | undefined
+  ) => {
+    if (relationship === undefined) {
+      return 1;
+    }
+    return relationship.includes(userId) ? trueModifier : falseModifier;
+  };
+  return (
+    checkRelationship(1, 0, relationships.ignoreUsers) *
+    checkRelationship(FREQUENT_MODIFIER, 1, relationships.frequentUsers) *
+    checkRelationship(
+      SEMI_FREQUENT_MODIFIER,
+      0,
+      relationships.semiFrequentUsers
+    )
+  );
 }
 
 /**
@@ -33,7 +61,8 @@ export interface IRecommendation {
 function generateRecommendationScores(
   activeUser: IFullUser,
   allUsersEventsMap: Map<string, IFullEvent>,
-  relationships: IRelationship
+  relationships: IRelationship,
+  isPremium: boolean
 ): Array<[string, number]> {
   if (activeUser.connections === undefined) {
     return [];
@@ -58,19 +87,16 @@ function generateRecommendationScores(
     }
     const latestEventScore = totalDaysSinceLastEvent ** LATEST_EVENT_MODIFIER;
 
-    let isOnIgnoreList = 1;
-    if (relationships !== undefined) {
-      isOnIgnoreList =
-        relationships.ignoreUsers !== undefined &&
-        relationships.ignoreUsers.includes(userConnection[0])
-          ? 0
-          : 1;
-    }
+    const relationshipModifier = isPremium
+      ? getRelationshipModifier(userConnection[0], relationships)
+      : 1;
 
-    const finalScore =
+    const checkForNewFriends =
       userConnection[1].length > 0
-        ? totalConnectionsScore * latestEventScore * isOnIgnoreList
-        : NEVER_BEFORE_SEEN_FRIEND * isOnIgnoreList;
+        ? totalConnectionsScore * latestEventScore
+        : NEVER_BEFORE_SEEN_FRIEND;
+
+    const finalScore = checkForNewFriends * relationshipModifier;
 
     return [userConnection[0], finalScore] as [string, number];
   });
@@ -88,12 +114,14 @@ function generateRecommendationScores(
 function getRecommendation(
   activeUser: IFullUser,
   allUsersEventsMapped: IFullEvent[],
-  relationships: IRelationship
+  relationships: IRelationship,
+  isPremium: boolean
 ): IRecommendation {
   const recommendationScores = generateRecommendationScores(
     activeUser,
     convertArrayToMap(allUsersEventsMapped),
-    relationships
+    relationships,
+    isPremium
   );
 
   const getNewPeople = recommendationScores.filter(
@@ -156,7 +184,12 @@ export async function getAllRecommendations(
   database: mongo.Db
 ) {
   const allRecommendations = allActiveUsers.map(user =>
-    getRecommendation(user.user, user.allUsersEventsMapped, user.relationships)
+    getRecommendation(
+      user.user,
+      user.allUsersEventsMapped,
+      user.relationships,
+      user.isPremium
+    )
   );
   const allRecommendedUsers = await getAllRecommendedFriends(
     allRecommendations,

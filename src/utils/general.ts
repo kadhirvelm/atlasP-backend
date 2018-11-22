@@ -4,6 +4,8 @@ import mongo from "mongodb";
 import { IFullUser } from "../users";
 
 import { IFullEvent } from "../events";
+import { IPremium } from "../premium";
+import { IRelationship } from "../relationships";
 import { generateAuthenticationToken } from "./security";
 
 const ADMINS: string[] = ["5b9a88d54f36eb0020736b43"];
@@ -61,9 +63,9 @@ export function flatten(previous: any[], next: any[]) {
   return previous.concat(next);
 }
 
-export function convertArrayToMap<T extends IFullUser | IFullEvent>(
-  itemArray: T[]
-): Map<string, T> {
+export function convertArrayToMap<
+  T extends IFullUser | IFullEvent | IRelationship | IPremium
+>(itemArray: T[]): Map<string, T> {
   const iteratable: Array<[string, T]> = itemArray.map(
     (item): [string, T] => [item._id.toHexString(), item]
   );
