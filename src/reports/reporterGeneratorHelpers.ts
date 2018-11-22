@@ -97,8 +97,8 @@ export async function getCategorizedUsers(
       if (getPremiumStatus !== undefined) {
         isPremium =
           differenceBetweenDates(
-            new Date(),
-            new Date(getPremiumStatus.expiration)
+            new Date(getPremiumStatus.expiration),
+            new Date()
           ) > 0;
       }
 

@@ -68,6 +68,8 @@ function generateRecommendationScores(
     return [];
   }
 
+  console.log(activeUser.name, isPremium);
+
   const connectionsCopy = { ...activeUser.connections };
   delete connectionsCopy[activeUser._id.toHexString()];
 
