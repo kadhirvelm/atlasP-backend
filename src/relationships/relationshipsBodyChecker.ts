@@ -11,6 +11,22 @@ export function validRelationshipBodyChecker(body: any) {
       `Ignore users must be an array of valid IDs: ${body.ignoreUsers}`
     );
   }
+  if (
+    body.frequentUsers !== undefined &&
+    !isValidMongoIDArray(body.frequentUsers)
+  ) {
+    errorMessages.push(
+      `Close friends users must be an array of valid IDs: ${body.frequentUsers}`
+    );
+  }
+  if (
+    body.semiFrequentUsers !== undefined &&
+    !isValidMongoIDArray(body.semiFrequentUsers)
+  ) {
+    errorMessages.push(
+      `Family users must be an array of valid IDs: ${body.semiFrequentUsers}`
+    );
+  }
   return errorMessages;
 }
 

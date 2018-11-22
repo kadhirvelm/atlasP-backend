@@ -50,4 +50,34 @@ describe("Relationships", () => {
     );
     expect(ignoredUsers.body.payload.ignoreUsers[0]).to.equal(DEFAULT_MONGOID);
   });
+
+  it("allows a user to update multiple lists", async () => {
+    mongoMock.setAuthenticationToken(
+      generateAuthenticationToken(new mongo.ObjectId(userIds[0]))
+    );
+    await mongoMock.sendRequest(IRequestTypes.POST, "/relationships/update", {
+      frequentUsers: [DEFAULT_MONGOID]
+    });
+    const ignoredUsers = await mongoMock.sendRequest(
+      IRequestTypes.GET,
+      "/relationships/all",
+      {}
+    );
+    expect(ignoredUsers.body.payload.ignoreUsers[0]).to.equal(DEFAULT_MONGOID);
+    expect(ignoredUsers.body.payload.frequentUsers[0]).to.equal(
+      DEFAULT_MONGOID
+    );
+    await mongoMock.sendRequest(IRequestTypes.POST, "/relationships/update", {
+      ignoreUsers: []
+    });
+    const ignoredUsers2 = await mongoMock.sendRequest(
+      IRequestTypes.GET,
+      "/relationships/all",
+      {}
+    );
+    expect(ignoredUsers2.body.payload.ignoreUsers.length).to.equal(0);
+    expect(ignoredUsers2.body.payload.frequentUsers[0]).to.equal(
+      DEFAULT_MONGOID
+    );
+  });
 });
