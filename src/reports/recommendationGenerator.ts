@@ -42,11 +42,11 @@ function getRelationshipModifier(userId: string, relationships: IRelationship) {
     return relationship.includes(userId) ? trueModifier : falseModifier;
   };
   return (
-    checkRelationship(1, 0, relationships.ignoreUsers) *
+    checkRelationship(0, 1, relationships.ignoreUsers) *
     checkRelationship(FREQUENT_MODIFIER, 1, relationships.frequentUsers) *
     checkRelationship(
       SEMI_FREQUENT_MODIFIER,
-      0,
+      1,
       relationships.semiFrequentUsers
     )
   );
