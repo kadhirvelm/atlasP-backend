@@ -13,8 +13,8 @@ import {
 } from "../reports/reportGeneratorUtils";
 import { IFullUser } from "../users";
 import { convertArrayToMap } from "../utils";
-import { getDateKey, IUserRecommendations } from "./recommendationConstants";
-import { RecommendationsDatabase } from "./recommendationsDatabase";
+import { IUserRecommendations } from "./recommendationConstants";
+import { RecommendationDatabase } from "./recommendationDatabase";
 
 const TOTAL_CONNECTIONS_MODIFIER = 1.0;
 const LATEST_EVENT_MODIFIER = 1.2;
@@ -163,7 +163,7 @@ function getRecommendation(
   if (previousRecommendations !== undefined) {
     generatedRecommendation =
       previousRecommendations.allRecommendations[
-        getDateKey(previousRecommendations.lastRecommendation)
+        previousRecommendations.lastRecommendation
       ].toHexString() === generatedRecommendation[0]
         ? sortedRecommendations[1]
         : generatedRecommendation;
@@ -198,9 +198,9 @@ function assembleRecommendationString(
 
 async function getAllPreviousRecommendations(
   ids: string[],
-  RecommendationDatabase: RecommendationsDatabase
+  recommendationDatabase: RecommendationDatabase
 ): Promise<Map<string, IUserRecommendations>> {
-  const allPreviousRecommendations = await RecommendationDatabase.getManyRecommendations(
+  const allPreviousRecommendations = await recommendationDatabase.getManyRecommendations(
     ids
   );
   return convertArrayToMap(allPreviousRecommendations);
@@ -209,10 +209,10 @@ async function getAllPreviousRecommendations(
 async function writeRecommendationsToDatabase(
   allRecommendations: IRecommendation[],
   allPreviousRecommendations: Map<string, IUserRecommendations>,
-  RecommendationDatabase: RecommendationsDatabase
+  recommendationDatabase: RecommendationDatabase
 ) {
   for (const recommendation of allRecommendations) {
-    await RecommendationDatabase.writeRecommendation(
+    await recommendationDatabase.writeRecommendation(
       recommendation.activeUser._id,
       allPreviousRecommendations.get(
         recommendation.activeUser._id.toHexString()
@@ -236,7 +236,7 @@ function filterByAtLeastOneWeekSinceRecommendation(
     return (
       differenceBetweenDates(
         new Date(),
-        previousRecommendation.lastRecommendation
+        new Date(previousRecommendation.lastRecommendation)
       ) > TOTAL_DAYS_UNTIL_NEXT_RECOMMENDATION
     );
   });
@@ -246,11 +246,11 @@ export async function getAllRecommendations(
   allActiveUsers: ICategorizedUser[],
   database: mongo.Db
 ) {
-  const RecommendationDatabase = new RecommendationsDatabase(database);
+  const recommendationDatabase = new RecommendationDatabase(database);
 
   const allPreviousRecommendations = await getAllPreviousRecommendations(
     allActiveUsers.map(user => user.user._id.toHexString()),
-    RecommendationDatabase
+    recommendationDatabase
   );
   const allFilteredRecommendations = filterByAtLeastOneWeekSinceRecommendation(
     allActiveUsers,
@@ -270,7 +270,7 @@ export async function getAllRecommendations(
   writeRecommendationsToDatabase(
     allRecommendations,
     allPreviousRecommendations,
-    RecommendationDatabase
+    recommendationDatabase
   );
 
   const allRecommendedUsers = await getAllRecommendedFriends(
