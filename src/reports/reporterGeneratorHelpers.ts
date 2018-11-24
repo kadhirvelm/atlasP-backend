@@ -1,13 +1,13 @@
 import axios from "axios";
 import mongo from "mongodb";
 
+import { isStillPremium } from "../account/accountDatabase";
 import { EVENTS_COLLECTION, IFullEvent } from "../events";
 import { IRelationship } from "../relationships";
 import { IFullUser } from "../users";
 import { convertArrayToMap, fullSanitizeUser } from "../utils";
 import {
   createSingleEventString,
-  differenceBetweenDates,
   getAllAccountUsers,
   getAllClaimedUsers,
   getAllLastEvents,
@@ -95,11 +95,7 @@ export async function getCategorizedUsers(
       let isPremium = false;
       const getAccountStatus = allAccountUsers.get(user._id.toHexString());
       if (getAccountStatus !== undefined) {
-        isPremium =
-          differenceBetweenDates(
-            new Date(getAccountStatus.expiration),
-            new Date()
-          ) > 0;
+        isPremium = isStillPremium(getAccountStatus.expiration);
       }
 
       const daysSinceLastEvent = getMinimumDaysSince(allUsersEventsMapped);

@@ -14,7 +14,7 @@ export class AccountDatabase {
     }
     return {
       expiration: status.expiration,
-      isPremium: isStillAccount(status.expiration)
+      isPremium: isStillPremium(status.expiration)
     };
   }
 
@@ -26,7 +26,7 @@ export class AccountDatabase {
         { expiration, _id: userId },
         { upsert: true }
       );
-    return { expiration, isPremium: isStillAccount(expiration) };
+    return { expiration, isPremium: isStillPremium(expiration) };
   }
 }
 
@@ -34,7 +34,7 @@ export class AccountDatabase {
  * Utils
  */
 
-function isStillAccount(date: string | Date) {
+export function isStillPremium(date: string | Date) {
   if (isString(date)) {
     return new Date(date).getTime() - new Date().getTime() > 0;
   }
