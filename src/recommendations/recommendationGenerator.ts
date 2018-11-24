@@ -1,9 +1,8 @@
 import mongo from "mongodb";
+
 import { IFullEvent } from "../events";
 import { IRelationship } from "../relationships";
-import { IFullUser } from "../users";
-import { convertArrayToMap } from "../utils";
-import { ICategorizedUser } from "./reporterGeneratorHelpers";
+import { ICategorizedUser } from "../reports/reporterGeneratorHelpers";
 import {
   convertToMongoId,
   differenceBetweenDates,
@@ -11,13 +10,19 @@ import {
   getAllUsersWithIds,
   getLatestEvent,
   REMIND_ON_INACTIVE_DAY_COUNT
-} from "./reportGeneratorUtils";
+} from "../reports/reportGeneratorUtils";
+import { IFullUser } from "../users";
+import { convertArrayToMap } from "../utils";
+import { getDateKey, IUserRecommendations } from "./recommendationConstants";
+import { RecommendationsDatabase } from "./recommendationsDatabase";
 
 const TOTAL_CONNECTIONS_MODIFIER = 1.0;
 const LATEST_EVENT_MODIFIER = 1.2;
 const NEVER_BEFORE_SEEN_FRIEND = -1;
 const FREQUENT_MODIFIER = 16;
 const SEMI_FREQUENT_MODIFIER = 8;
+
+const TOTAL_DAYS_UNTIL_NEXT_RECOMMENDATION = 6.5;
 
 export interface IRecommendation {
   activeUser: IFullUser;
@@ -115,7 +120,8 @@ function getRecommendation(
   activeUser: IFullUser,
   allUsersEventsMapped: IFullEvent[],
   relationships: IRelationship,
-  isPremium: boolean
+  isPremium: boolean,
+  previousRecommendations: IUserRecommendations | undefined
 ): IRecommendation {
   const recommendationScores = generateRecommendationScores(
     activeUser,
@@ -152,10 +158,21 @@ function getRecommendation(
   const sortedRecommendations = filterOutPeopleSeenLessThanCutOff.sort(
     (a, b) => b[1] - a[1]
   );
+
+  let generatedRecommendation = sortedRecommendations[0];
+  if (previousRecommendations !== undefined) {
+    generatedRecommendation =
+      previousRecommendations.allRecommendations[
+        getDateKey(previousRecommendations.lastRecommendation)
+      ].toHexString() === generatedRecommendation[0]
+        ? sortedRecommendations[1]
+        : generatedRecommendation;
+  }
+
   return {
     activeUser,
-    recommendation: sortedRecommendations[0][0],
-    score: sortedRecommendations[0][1]
+    recommendation: generatedRecommendation[0],
+    score: generatedRecommendation[1]
   };
 }
 
@@ -179,18 +196,83 @@ function assembleRecommendationString(
   },${recommendedFriend.phoneNumber || "NO NUMBER"},${score}\n`;
 }
 
+async function getAllPreviousRecommendations(
+  ids: string[],
+  RecommendationDatabase: RecommendationsDatabase
+): Promise<Map<string, IUserRecommendations>> {
+  const allPreviousRecommendations = await RecommendationDatabase.getManyRecommendations(
+    ids
+  );
+  return convertArrayToMap(allPreviousRecommendations);
+}
+
+async function writeRecommendationsToDatabase(
+  allRecommendations: IRecommendation[],
+  allPreviousRecommendations: Map<string, IUserRecommendations>,
+  RecommendationDatabase: RecommendationsDatabase
+) {
+  for (const recommendation of allRecommendations) {
+    await RecommendationDatabase.writeRecommendation(
+      recommendation.activeUser._id,
+      allPreviousRecommendations.get(
+        recommendation.activeUser._id.toHexString()
+      ),
+      new mongo.ObjectId(recommendation.recommendation)
+    );
+  }
+}
+
+function filterByAtLeastOneWeekSinceRecommendation(
+  allActiveUsers: ICategorizedUser[],
+  allPreviousRecommendations: Map<string, IUserRecommendations>
+): ICategorizedUser[] {
+  return allActiveUsers.filter(user => {
+    const previousRecommendation = allPreviousRecommendations.get(
+      user.user._id.toHexString()
+    );
+    if (previousRecommendation === undefined) {
+      return true;
+    }
+    return (
+      differenceBetweenDates(
+        new Date(),
+        previousRecommendation.lastRecommendation
+      ) > TOTAL_DAYS_UNTIL_NEXT_RECOMMENDATION
+    );
+  });
+}
+
 export async function getAllRecommendations(
   allActiveUsers: ICategorizedUser[],
   database: mongo.Db
 ) {
-  const allRecommendations = allActiveUsers.map(user =>
+  const RecommendationDatabase = new RecommendationsDatabase(database);
+
+  const allPreviousRecommendations = await getAllPreviousRecommendations(
+    allActiveUsers.map(user => user.user._id.toHexString()),
+    RecommendationDatabase
+  );
+  const allFilteredRecommendations = filterByAtLeastOneWeekSinceRecommendation(
+    allActiveUsers,
+    allPreviousRecommendations
+  );
+
+  const allRecommendations = allFilteredRecommendations.map(user =>
     getRecommendation(
       user.user,
       user.allUsersEventsMapped,
       user.relationships,
-      user.isPremium
+      user.isPremium,
+      allPreviousRecommendations.get(user.user._id.toHexString())
     )
   );
+
+  writeRecommendationsToDatabase(
+    allRecommendations,
+    allPreviousRecommendations,
+    RecommendationDatabase
+  );
+
   const allRecommendedUsers = await getAllRecommendedFriends(
     allRecommendations,
     database

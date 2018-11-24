@@ -5,6 +5,7 @@ import { IFullUser } from "../users";
 
 import { IAccount } from "../account";
 import { IFullEvent } from "../events";
+import { IUserRecommendations } from "../recommendations/recommendationConstants";
 import { IRelationship } from "../relationships";
 import { generateAuthenticationToken } from "./security";
 
@@ -64,7 +65,12 @@ export function flatten(previous: any[], next: any[]) {
 }
 
 export function convertArrayToMap<
-  T extends IFullUser | IFullEvent | IRelationship | IAccount
+  T extends
+    | IFullUser
+    | IFullEvent
+    | IRelationship
+    | IAccount
+    | IUserRecommendations
 >(itemArray: T[]): Map<string, T> {
   const iteratable: Array<[string, T]> = itemArray.map(
     (item): [string, T] => [item._id.toHexString(), item]

@@ -5,7 +5,7 @@ import nodemailer from "nodemailer";
 import ses from "nodemailer-ses-transport";
 
 import { PureRouter } from "../general";
-import { getAllRecommendations } from "./recommendationGenerator";
+import { getAllRecommendations } from "../recommendations/recommendationGenerator";
 import {
   createEventsMailBody,
   createMailSubject,
