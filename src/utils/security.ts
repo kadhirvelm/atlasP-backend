@@ -77,7 +77,7 @@ export function verifyPassword(
     req.headers["access-token"] as string,
     process.env.NODE_SECRET
   ) as IJWTOutput;
-  if (atlasPassword.id !== process.env.PREMIUM_PASSWORD) {
+  if (atlasPassword.id !== process.env.ACCOUNT_PASSWORD) {
     return res.status(401).json({
       error:
         "Something went wrong with your request, please contact an administrator."

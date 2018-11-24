@@ -20,12 +20,12 @@
 | POST | /remove-connection | removes an existing connection provided the user has no events with them                | Yes         |
 | POST | /reset             | resets a user's claimed status to false using their phone number                        | Yes         |
 
-### /premium
+### /account
 
 | REST | Route    | Action                                                       | Implemented |
 | ---- | -------- | ------------------------------------------------------------ | ----------- |
-| GET  | /check   | returns the current authenticated user's premium status      | Yes         |
-| POST | /upgrade | allows an admin user to increase a user's premium expiration | Yes         |
+| GET  | /check   | returns the current authenticated user's account status      | Yes         |
+| POST | /upgrade | allows an admin user to increase a user's account expiration | Yes         |
 
 ### /relationships
 

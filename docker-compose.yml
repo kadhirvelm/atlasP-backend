@@ -19,7 +19,7 @@ services:
       - CLIENT_GMAIL_SECRET
       - NODE_ENV
       - NODE_SECRET
-      - PREMIUM_PASSWORD
+      - ACCOUNT_PASSWORD
       - PORT
       - REDIRECT_URI
       - REACT_APP_SPREADSHEET

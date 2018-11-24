@@ -1,6 +1,6 @@
 import mongo from "mongodb";
+import { ACCOUNT_COLLECTION, IAccount } from "../account";
 import { EVENTS_COLLECTION, IFullEvent } from "../events";
-import { IPremium, PREMIUM_COLLECTION } from "../premium";
 import { IRelationship, RELATIONSHIPS_COLLECTION } from "../relationships";
 import { IFullUser, USERS_COLLECTION } from "../users";
 import { flatten } from "../utils";
@@ -142,12 +142,12 @@ export function getAllRelationships(
     .toArray();
 }
 
-export function getAllPremiumUsers(
+export function getAllAccountUsers(
   ids: mongo.ObjectId[],
   database: mongo.Db
-): Promise<IPremium[]> {
+): Promise<IAccount[]> {
   return database
-    .collection(PREMIUM_COLLECTION)
+    .collection(ACCOUNT_COLLECTION)
     .find({ _id: { $in: ids } })
     .toArray();
 }
