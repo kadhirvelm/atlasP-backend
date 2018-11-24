@@ -1,8 +1,8 @@
 import mongo from "mongodb";
 
-export const PREMIUM_COLLECTION = "PREMIUM";
+export const ACCOUNT_COLLECTION = "ACCOUNT";
 
-export interface IPremium {
+export interface IAccount {
   _id: mongo.ObjectId;
   expiration: Date;
 }

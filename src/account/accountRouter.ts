@@ -8,34 +8,34 @@ import {
   verifyPassword,
   verifyToken
 } from "../utils";
-import { isValidUpgrade } from "./premiumBodyChecker";
-import { PremiumDatabase } from "./premiumDatabase";
+import { isValidUpgrade } from "./accountBodyChecker";
+import { AccountDatabase } from "./accountDatabase";
 
-export const PREMIUM_ROOT = "/premium";
+export const ACCOUNT_ROOT = "/account";
 
-class PurePremiumRouter extends PureRouter {
-  private premium: PremiumDatabase;
+class PureAccountRouter extends PureRouter {
+  private account: AccountDatabase;
 
   constructor(db: mongo.Db) {
     super();
-    this.premium = new PremiumDatabase(db);
+    this.account = new AccountDatabase(db);
     this.mountPrivateRoutes();
   }
 
   private mountPrivateRoutes() {
-    this.router.get("/check", verifyToken, this.handleCheckPremiumStatus);
+    this.router.get("/check", verifyToken, this.handleCheckAccountStatus);
     this.router.post("/upgrade", verifyPassword, this.handleUpgradeUser);
   }
 
-  private handleCheckPremiumStatus = async (
+  private handleCheckAccountStatus = async (
     req: IAuthenticatedRequest,
     res: express.Response
   ) => {
-    const payload = await this.premium.checkPremiumStatus(
+    const payload = await this.account.checkAccountStatus(
       req.AUTHENTICATED_USER_ID
     );
     return res.json({
-      message: "Attempted to check premium status",
+      message: "Attempted to check account status",
       payload
     });
   };
@@ -48,15 +48,15 @@ class PurePremiumRouter extends PureRouter {
     if (errors.length > 0) {
       return sendError(res, errors);
     }
-    const payload = await this.premium.upgradeUser(
+    const payload = await this.account.upgradeUser(
       new mongo.ObjectId(req.body.userId),
       req.body.expiration
     );
     return res.json({
-      message: "Attempted to upgrade user to premium",
+      message: "Attempted to upgrade user to account",
       payload
     });
   };
 }
 
-export const PremiumRoutes = (db: mongo.Db) => new PurePremiumRouter(db).router;
+export const AccountRoutes = (db: mongo.Db) => new PureAccountRouter(db).router;

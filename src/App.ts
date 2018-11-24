@@ -2,10 +2,10 @@ import bodyParser from "body-parser";
 import express from "express";
 import mongo from "mongodb";
 
+import { ACCOUNT_ROOT, AccountRoutes } from "./account/accountRouter";
 import { EventRouters, EVENTS_ROOT } from "./events/eventsRouter";
 import { GENERAL_ROOT, GeneralRoutes } from "./general/generalRouter";
 import { GOOGLE_ROOT, GoogleRoutes } from "./google/googleRouter";
-import { PREMIUM_ROOT, PremiumRoutes } from "./premium/premiumRouter";
 import {
   RelationshipRoutes,
   RELATIONSHIPS_ROOT
@@ -55,7 +55,7 @@ export class PureApp {
     this.app.use(EVENTS_ROOT, EventRouters(this.database));
     this.app.use(USERS_ROOT, UsersRoutes(this.database));
     this.app.use(RELATIONSHIPS_ROOT, RelationshipRoutes(this.database));
-    this.app.use(PREMIUM_ROOT, PremiumRoutes(this.database));
+    this.app.use(ACCOUNT_ROOT, AccountRoutes(this.database));
     this.app.use(GOOGLE_ROOT, GoogleRoutes(this.database));
     this.app.use(REPORT_ROOT, ReporterRoutes(this.database));
   }

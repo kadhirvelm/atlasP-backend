@@ -1,14 +1,14 @@
 import mongo from "mongodb";
-import { PREMIUM_COLLECTION } from "./premiumConstants";
+import { ACCOUNT_COLLECTION } from "./accountConstants";
 
-export class PremiumDatabase {
+export class AccountDatabase {
   constructor(private db: mongo.Db) {}
 
-  public async checkPremiumStatus(userId: mongo.ObjectId) {
-    const userPremiumStatus = await this.db
-      .collection(PREMIUM_COLLECTION)
+  public async checkAccountStatus(userId: mongo.ObjectId) {
+    const userAccountStatus = await this.db
+      .collection(ACCOUNT_COLLECTION)
       .find({ _id: userId });
-    const status = await userPremiumStatus.next();
+    const status = await userAccountStatus.next();
     if (status === null) {
       return { isPremium: false };
     }
@@ -20,7 +20,7 @@ export class PremiumDatabase {
 
   public async upgradeUser(userId: mongo.ObjectId, expiration: Date) {
     await this.db
-      .collection(PREMIUM_COLLECTION)
+      .collection(ACCOUNT_COLLECTION)
       .replaceOne(
         { _id: userId },
         { expiration, _id: userId },
@@ -34,7 +34,7 @@ export class PremiumDatabase {
  * Utils
  */
 
-function isStillPremium(date: string | Date) {
+export function isStillPremium(date: string | Date) {
   if (isString(date)) {
     return new Date(date).getTime() - new Date().getTime() > 0;
   }

@@ -13,7 +13,7 @@ import {
   FAKE_PHONE_NUMBERS
 } from "../../utils/__tests__/usersUtils";
 
-describe("Premium", () => {
+describe("account", () => {
   let mongoMock: MongoMock;
   const userIds: string[] = [];
 
@@ -29,7 +29,7 @@ describe("Premium", () => {
     await mongoMock.close();
   });
 
-  it("allows a user to check their premium status", async () => {
+  it("allows a user to check their account status", async () => {
     const newUser = await mongoMock.sendRequest(
       IRequestTypes.POST,
       "/users/new",
@@ -45,20 +45,20 @@ describe("Premium", () => {
     mongoMock.setAuthenticationToken(
       generateAuthenticationToken(new mongo.ObjectId(userId))
     );
-    const checkPremiumStatus = await mongoMock.sendRequest(
+    const checkAccountStatus = await mongoMock.sendRequest(
       IRequestTypes.GET,
-      "/premium/check",
+      "/account/check",
       {}
     );
-    expect(checkPremiumStatus.body.payload.isPremium).to.equal(false);
+    expect(checkAccountStatus.body.payload.isPremium).to.equal(false);
   });
 
-  it("allows an admin to upgrade a user's account to premium", async () => {
-    const premiumToken = generatePasswordToken(process.env.PREMIUM_PASSWORD);
-    mongoMock.setAuthenticationToken(premiumToken);
+  it("allows an admin to upgrade a user's account to account", async () => {
+    const accountToken = generatePasswordToken(process.env.ACCOUNT_PASSWORD);
+    mongoMock.setAuthenticationToken(accountToken);
     const response = await mongoMock.sendRequest(
       IRequestTypes.POST,
-      "/premium/upgrade",
+      "/account/upgrade",
       {
         expiration: incrementDate(new Date(), 30),
         userId: userIds[0]
@@ -68,22 +68,22 @@ describe("Premium", () => {
     mongoMock.setAuthenticationToken(
       generateAuthenticationToken(new mongo.ObjectId(userIds[0]))
     );
-    const checkPremiumStatus = await mongoMock.sendRequest(
+    const checkAccountStatus = await mongoMock.sendRequest(
       IRequestTypes.GET,
-      "/premium/check",
+      "/account/check",
       {}
     );
-    expect(checkPremiumStatus.body.payload.isPremium).to.equal(true);
-    expect(checkPremiumStatus.body.payload.expiration).to.not.equal(undefined);
+    expect(checkAccountStatus.body.payload.isPremium).to.equal(true);
+    expect(checkAccountStatus.body.payload.expiration).to.not.equal(undefined);
   });
 
-  it("does not allow an admin to upgrade a user's account to premium that is in the past", async () => {
+  it("does not allow an admin to upgrade a user's account to account that is in the past", async () => {
     mongoMock.setAuthenticationToken(
-      generatePasswordToken(process.env.PREMIUM_PASSWORD)
+      generatePasswordToken(process.env.ACCOUNT_PASSWORD)
     );
     const response = await mongoMock.sendRequest(
       IRequestTypes.POST,
-      "/premium/upgrade",
+      "/account/upgrade",
       {
         expiration: incrementDate(new Date(), -1),
         userId: userIds[0]
