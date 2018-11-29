@@ -1,5 +1,6 @@
 import mongo from "mongodb";
-import { parseIntoObjectIDs } from "../utils";
+import { IUser, UserDatabase } from "../users";
+import { fullSanitizeUser, parseIntoObjectIDs } from "../utils";
 import {
   getDateKey,
   IUserRecommendations,
@@ -7,7 +8,11 @@ import {
 } from "./recommendationConstants";
 
 export class RecommendationDatabase {
-  constructor(private db: mongo.Db) {}
+  private users: UserDatabase;
+
+  constructor(private db: mongo.Db) {
+    this.users = new UserDatabase(db);
+  }
 
   public async getManyRecommendations(
     ids: string[]
@@ -42,17 +47,27 @@ export class RecommendationDatabase {
       });
   }
 
-  public async shouldDisplayRecommendationDialog(
+  public async shouldDisplayUserRecommendationDialog(
     userId: mongo.ObjectId
-  ): Promise<boolean> {
+  ): Promise<IUser | undefined> {
     const userLastSeenRecommendation = await this.db
       .collection(RECOMMENDATIONS_COLLECTION)
       .find({ _id: userId });
     const userLastSeenFinal: IUserRecommendations = await userLastSeenRecommendation.next();
-    return userLastSeenFinal === undefined
-      ? false
-      : userLastSeenFinal.lastUserSeenRecommendation !==
-          userLastSeenFinal.lastRecommendation;
+    if (
+      userLastSeenFinal === undefined ||
+      userLastSeenFinal.lastUserSeenRecommendation ===
+        userLastSeenFinal.lastRecommendation
+    ) {
+      return undefined;
+    }
+
+    const user = await this.users.getUser(
+      userLastSeenFinal.allRecommendations[
+        userLastSeenFinal.lastRecommendation
+      ].toHexString()
+    );
+    return fullSanitizeUser(user[0]);
   }
 
   public async writeLastUserSeenRecommendation(userId: mongo.ObjectId) {

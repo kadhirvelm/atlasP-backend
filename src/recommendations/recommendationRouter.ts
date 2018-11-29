@@ -33,7 +33,7 @@ class PureRecommendationRouter extends PureRouter {
     req: IAuthenticatedRequest,
     res: express.Response
   ) => {
-    const payload = await this.recommendations.shouldDisplayRecommendationDialog(
+    const payload = await this.recommendations.shouldDisplayUserRecommendationDialog(
       req.AUTHENTICATED_USER_ID
     );
     return res.json({
