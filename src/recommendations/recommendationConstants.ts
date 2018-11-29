@@ -8,7 +8,8 @@ export interface IRecommendations {
 
 export interface IUserRecommendations {
   _id: mongo.ObjectId;
-  lastRecommendation: Date;
+  lastRecommendation: string;
+  lastUserSeenRecommendation?: string;
   allRecommendations: IRecommendations;
 }
 

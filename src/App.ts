@@ -7,6 +7,10 @@ import { EventRouters, EVENTS_ROOT } from "./events/eventsRouter";
 import { GENERAL_ROOT, GeneralRoutes } from "./general/generalRouter";
 import { GOOGLE_ROOT, GoogleRoutes } from "./google/googleRouter";
 import {
+  RecommendationRouter,
+  RECOMMENDATIONS_ROOT
+} from "./recommendations/recommendationRouter";
+import {
   RelationshipRoutes,
   RELATIONSHIPS_ROOT
 } from "./relationships/relationshipsRouter";
@@ -56,6 +60,7 @@ export class PureApp {
     this.app.use(USERS_ROOT, UsersRoutes(this.database));
     this.app.use(RELATIONSHIPS_ROOT, RelationshipRoutes(this.database));
     this.app.use(ACCOUNT_ROOT, AccountRoutes(this.database));
+    this.app.use(RECOMMENDATIONS_ROOT, RecommendationRouter(this.database));
     this.app.use(GOOGLE_ROOT, GoogleRoutes(this.database));
     this.app.use(REPORT_ROOT, ReporterRoutes(this.database));
   }
