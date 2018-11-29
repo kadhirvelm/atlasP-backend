@@ -53,6 +53,13 @@
 | POST | /fetch_from_sheets | appends google sheet data to the database, mostly useful for initially populating the db | Yes         |
 | POST | /write_to_sheets   | writes USERS and EVENTS to google sheets                                                 | Yes         |
 
+### /recommendations
+
+| REST | Route  | Action                                                          | Implemented |
+| ---- | ------ | --------------------------------------------------------------- | ----------- |
+| GET  | /read  | reads if the user was recommended someone they haven't seen yet | Yes         |
+| GET  | /write | writes if they've seen the recommendation                       | Yes         |
+
 ### /reports
 
 | REST | Route     | Action                                                   | Implemented |
