@@ -22,7 +22,7 @@ const NEVER_BEFORE_SEEN_FRIEND = -1;
 const FREQUENT_MODIFIER = 16;
 const SEMI_FREQUENT_MODIFIER = 8;
 
-const TOTAL_DAYS_UNTIL_NEXT_RECOMMENDATION = 6.5;
+const TOTAL_DAYS_UNTIL_NEXT_RECOMMENDATION = 7;
 
 export interface IRecommendation {
   activeUser: IFullUser;
