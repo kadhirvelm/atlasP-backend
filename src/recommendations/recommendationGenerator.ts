@@ -81,20 +81,12 @@ function generateRecommendationScores(
       };
     }
 
-    const latestEvent = getLatestEvent(
-      userConnection[1].map(id => allUsersEventsMap.get(id.toHexString()))
-    );
-
-    if (latestEvent === undefined) {
-      return {
-        id: userConnection[0],
-        score: 0
-      };
-    }
-
     const totalConnectionsScore =
       userConnection[1].length ** TOTAL_CONNECTIONS_MODIFIER;
 
+    const latestEvent = getLatestEvent(
+      userConnection[1].map(id => allUsersEventsMap.get(id.toHexString()))
+    );
     const totalDaysSinceLastEvent =
       differenceBetweenDates(new Date(), latestEvent.date) -
       getFrequency(userConnection[0], relationships, isPremium);
