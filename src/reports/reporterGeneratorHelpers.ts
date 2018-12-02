@@ -15,9 +15,10 @@ import {
   getAllUserEventsMapped,
   getMinimumDaysSince,
   getRawUsers,
-  incrementDate,
-  REMIND_ON_INACTIVE_DAY_COUNT
+  incrementDate
 } from "./reportGeneratorUtils";
+
+const INACTIVE_USER_DAY_COUNT = 30;
 
 export interface ICategorizedUser {
   allUsersEventsMapped: IFullEvent[];
@@ -98,12 +99,12 @@ export async function getCategorizedUsers(
         isPremium = isStillPremium(getAccountStatus.expiration);
       }
 
-      const daysSinceLastEvent = getMinimumDaysSince(allUsersEventsMapped);
+      const daysSinceLastActive = getMinimumDaysSince(allUsersEventsMapped);
       return {
         allUsersEventsMapped,
-        isInactive: daysSinceLastEvent > REMIND_ON_INACTIVE_DAY_COUNT,
+        isInactive: daysSinceLastActive > INACTIVE_USER_DAY_COUNT,
         isPremium,
-        message: `${user.name},${daysSinceLastEvent} days,+1${
+        message: `${user.name},${daysSinceLastActive} days,+1${
           user.phoneNumber
         }\n`,
         relationships: allRelationships.get(user._id.toHexString()),
