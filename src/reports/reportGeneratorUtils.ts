@@ -5,8 +5,6 @@ import { IRelationship, RELATIONSHIPS_COLLECTION } from "../relationships";
 import { IFullUser, USERS_COLLECTION } from "../users";
 import { flatten } from "../utils";
 
-export const REMIND_ON_INACTIVE_DAY_COUNT = 30;
-
 export const convertToMongoId = (id: string) => new mongo.ObjectId(id);
 
 export const extractUsers = (event: any) =>

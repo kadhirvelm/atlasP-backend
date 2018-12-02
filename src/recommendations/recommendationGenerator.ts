@@ -8,21 +8,28 @@ import {
   differenceBetweenDates,
   differenceBetweenMongoIdDates,
   getAllUsersWithIds,
-  getLatestEvent,
-  REMIND_ON_INACTIVE_DAY_COUNT
+  getLatestEvent
 } from "../reports/reportGeneratorUtils";
 import { IFullUser } from "../users";
-import { convertArrayToMap } from "../utils";
+import { convertArrayToMap, isNumber, isString } from "../utils";
 import { IUserRecommendations } from "./recommendationConstants";
 import { RecommendationDatabase } from "./recommendationDatabase";
 
-const TOTAL_CONNECTIONS_MODIFIER = 1.0;
+const TOTAL_CONNECTIONS_MODIFIER = 1.05;
 const LATEST_EVENT_MODIFIER = 1.2;
-const NEVER_BEFORE_SEEN_FRIEND = -1;
-const FREQUENT_MODIFIER = 16;
-const SEMI_FREQUENT_MODIFIER = 8;
+const NEVER_BEFORE_SEEN_FRIEND = "NEW FRIEND";
 
 const TOTAL_DAYS_UNTIL_NEXT_RECOMMENDATION = 7;
+const DEFAULT_FREQUENCY_DAY_COUNT = 30;
+
+interface IFilteredRecommendationScores extends IRecommendationScore {
+  score: number;
+}
+
+interface IRecommendationScore {
+  id: string;
+  score: number | string;
+}
 
 export interface IRecommendation {
   activeUser: IFullUser;
@@ -31,44 +38,34 @@ export interface IRecommendation {
 }
 
 /**
- * Sets an ignore user's score to 0 if they're on the ignore list, multiplies it
- * by FREQUENT_MODIFIER if a user has been categorized into frequent and by
- * SEMI_FREQUENT_MODIFIER if a user has been categorized into semi-frequent.
+ * Returns the frequency at which a user wants to see another user, defaulting to
+ * DEFAULT_FREQUENCY_DAY_COUNT and returning Infinity if the user is on the ignore list.
  */
-function getRelationshipModifier(userId: string, relationships: IRelationship) {
-  const checkRelationship = (
-    trueModifier: number,
-    falseModifier: number,
-    relationship: string[] | undefined
-  ) => {
-    if (relationship === undefined) {
-      return 1;
-    }
-    return relationship.includes(userId) ? trueModifier : falseModifier;
-  };
-  return (
-    checkRelationship(0, 1, relationships.ignoreUsers) *
-    checkRelationship(FREQUENT_MODIFIER, 1, relationships.frequentUsers) *
-    checkRelationship(
-      SEMI_FREQUENT_MODIFIER,
-      1,
-      relationships.semiFrequentUsers
-    )
-  );
+function getFrequency(
+  userId: string,
+  relationships: IRelationship,
+  isPremium: boolean
+) {
+  if (!isPremium) {
+    return DEFAULT_FREQUENCY_DAY_COUNT;
+  }
+
+  const remindOnDate =
+    relationships.frequency[userId] || DEFAULT_FREQUENCY_DAY_COUNT;
+  return remindOnDate === "IGNORE" ? Infinity : remindOnDate;
 }
 
 /**
  * The score is based on:
  * totalConnections^(TOTAL_CONNECTIONS_MODIFIER) * totalDaysSinceLastEvent^(LATEST_EVENT_MODIFIER),
- * making sure to set NaN scores for all people who the activeUser has seen less
- * than REMIND_ON_INACTIVE_DAY_COUNT.
+ * but spits out NEVER_BEFORE_SEEN_FRIEND if they haven't seen this person yet.
  */
 function generateRecommendationScores(
   activeUser: IFullUser,
   allUsersEventsMap: Map<string, IFullEvent>,
   relationships: IRelationship,
   isPremium: boolean
-): Array<[string, number]> {
+): IRecommendationScore[] {
   if (activeUser.connections === undefined) {
     return [];
   }
@@ -77,44 +74,39 @@ function generateRecommendationScores(
   delete connectionsCopy[activeUser._id.toHexString()];
 
   return Object.entries(connectionsCopy).map(userConnection => {
+    if (userConnection[1].length === 0) {
+      return {
+        id: userConnection[0],
+        score: NEVER_BEFORE_SEEN_FRIEND
+      };
+    }
+
     const totalConnectionsScore =
       userConnection[1].length ** TOTAL_CONNECTIONS_MODIFIER;
 
     const latestEvent = getLatestEvent(
       userConnection[1].map(id => allUsersEventsMap.get(id.toHexString()))
     );
-
-    let totalDaysSinceLastEvent = 0;
-    if (latestEvent !== undefined) {
-      totalDaysSinceLastEvent =
-        differenceBetweenDates(new Date(), latestEvent.date) -
-        REMIND_ON_INACTIVE_DAY_COUNT;
-    }
+    const totalDaysSinceLastEvent =
+      differenceBetweenDates(new Date(), latestEvent.date) -
+      getFrequency(userConnection[0], relationships, isPremium);
     const latestEventScore = totalDaysSinceLastEvent ** LATEST_EVENT_MODIFIER;
 
-    const relationshipModifier = isPremium
-      ? getRelationshipModifier(userConnection[0], relationships)
-      : 1;
-
-    const checkForNewFriends =
-      userConnection[1].length > 0
-        ? totalConnectionsScore * latestEventScore
-        : NEVER_BEFORE_SEEN_FRIEND;
-
-    const finalScore = checkForNewFriends * relationshipModifier;
-
-    return [userConnection[0], finalScore] as [string, number];
+    return {
+      id: userConnection[0],
+      score: totalConnectionsScore * latestEventScore
+    };
   });
 }
 
 /**
  * Generates a recommendation for the active user to see next. It first removes
- * all users seen in the last 30 days. Then it checks to see if there are any people
- * who the user has not seen yet. If any are present, they are returned as the
- * recommendation.
+ * all users the activeUser has seen with their frequency || DEFAULT_FREQUENCY_DAY_COUNT.
+ * Then it checks to see if there are any people who the user has not seen yet.
+ * If any are present, they are returned as the recommendation.
  *
  * If no new people exist, it then scores all users and selects the one with the
- * highest score.
+ * highest score, being sure to select someone new if they've seen this person last week.
  */
 function getRecommendation(
   activeUser: IFullUser,
@@ -130,23 +122,25 @@ function getRecommendation(
     isPremium
   );
 
-  const getNewPeople = recommendationScores.filter(
-    score => score[1] === NEVER_BEFORE_SEEN_FRIEND
+  const getNewPeople = recommendationScores.filter(recommendationScore =>
+    isString(recommendationScore.score)
   );
+
   if (getNewPeople.length > 0) {
     const sortedByCreationDateNewPeople = getNewPeople.sort((a, b) =>
-      differenceBetweenMongoIdDates(a[0], b[0])
+      differenceBetweenMongoIdDates(a.id, b.id)
     );
     return {
       activeUser,
-      recommendation: sortedByCreationDateNewPeople[0][0],
+      recommendation: sortedByCreationDateNewPeople[0].id,
       score: "New Friend"
     };
   }
 
   const filterOutPeopleSeenLessThanCutOff = recommendationScores.filter(
-    score => !isNaN(score[1]) && score[1] > 0
-  );
+    recommendationScore =>
+      isNumber(recommendationScore.score) && recommendationScore.score > 0
+  ) as IFilteredRecommendationScores[];
   if (filterOutPeopleSeenLessThanCutOff.length === 0) {
     return {
       activeUser,
@@ -156,23 +150,23 @@ function getRecommendation(
   }
 
   const sortedRecommendations = filterOutPeopleSeenLessThanCutOff.sort(
-    (a, b) => b[1] - a[1]
+    (a, b) => b.score - a.score
   );
 
   let generatedRecommendation = sortedRecommendations[0];
-  if (previousRecommendations !== undefined) {
-    generatedRecommendation =
-      previousRecommendations.allRecommendations[
-        previousRecommendations.lastRecommendation
-      ].toHexString() === generatedRecommendation[0]
-        ? sortedRecommendations[1]
-        : generatedRecommendation;
+  if (
+    previousRecommendations !== undefined &&
+    previousRecommendations.allRecommendations[
+      previousRecommendations.lastRecommendation
+    ].toHexString() === generatedRecommendation.id
+  ) {
+    generatedRecommendation = sortedRecommendations[1];
   }
 
   return {
     activeUser,
-    recommendation: generatedRecommendation[0],
-    score: generatedRecommendation[1]
+    recommendation: generatedRecommendation.id,
+    score: generatedRecommendation.score
   };
 }
 

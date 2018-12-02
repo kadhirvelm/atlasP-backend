@@ -1,32 +1,29 @@
 import mongo from "mongodb";
-import { isValidMongoIDArray } from "../utils";
+import { isString } from "util";
+import { isNumber, isValidMongoID } from "../utils";
 
 export function validRelationshipBodyChecker(body: any) {
-  const errorMessages = [];
-  if (
-    body.ignoreUsers !== undefined &&
-    !isValidMongoIDArray(body.ignoreUsers)
-  ) {
-    errorMessages.push(
-      `Ignore users must be an array of valid IDs: ${body.ignoreUsers}`
-    );
-  }
-  if (
-    body.frequentUsers !== undefined &&
-    !isValidMongoIDArray(body.frequentUsers)
-  ) {
-    errorMessages.push(
-      `Close friends users must be an array of valid IDs: ${body.frequentUsers}`
-    );
-  }
-  if (
-    body.semiFrequentUsers !== undefined &&
-    !isValidMongoIDArray(body.semiFrequentUsers)
-  ) {
-    errorMessages.push(
-      `Family users must be an array of valid IDs: ${body.semiFrequentUsers}`
-    );
-  }
+  const errorMessages: string[] = [];
+  Object.keys(body.frequency).map(id => {
+    if (!isValidMongoID(id)) {
+      errorMessages.push(`Invalid id in the frequency: ${id}`);
+    }
+    if (!isNumber(body.frequency[id]) && body.frequency[id] !== "IGNORE") {
+      errorMessages.push(
+        `An invalid frequency was provided: ${body.frequency[id]}`
+      );
+    }
+    if (isNumber(body.frequency[id]) && body.frequency[id] <= 0) {
+      errorMessages.push(
+        `A frequency must be a positive number or IGNORE: ${body.frequency[id]}`
+      );
+    }
+    if (isString(body.frequency[id]) && body.frequency[id] !== "IGNORE") {
+      errorMessages.push(
+        `A frequency must be IGNORE or a number: ${body.frequency[id]}`
+      );
+    }
+  });
   return errorMessages;
 }
 
@@ -35,11 +32,8 @@ export function isValidRelationshipUpdate(
   currentUserId: mongo.ObjectId
 ) {
   const errorMessages = [];
-  if (
-    body.ignoreUsers !== undefined &&
-    body.ignoreUsers.includes(currentUserId.toHexString())
-  ) {
-    errorMessages.push("Cannot ignore yourself.");
+  if (body.frequency[currentUserId.toHexString()] !== undefined) {
+    errorMessages.push("Cannot add yourself to a frequency.");
   }
   return validRelationshipBodyChecker(body).concat(errorMessages);
 }

@@ -6,7 +6,8 @@ import { generateAuthenticationToken } from "../../utils";
 import { IRequestTypes, MongoMock } from "../../utils/__tests__/generalUtils";
 import {
   DEFAULT_MONGOID,
-  FAKE_PHONE_NUMBERS
+  FAKE_PHONE_NUMBERS,
+  MONGO_ID_1
 } from "../../utils/__tests__/usersUtils";
 
 describe("Relationships", () => {
@@ -25,7 +26,7 @@ describe("Relationships", () => {
     await mongoMock.close();
   });
 
-  it("allows a user to an another to their ignore list", async () => {
+  it("allows a user to change the frequency at which they see another user", async () => {
     const newUserA = await mongoMock.sendRequest(
       IRequestTypes.POST,
       "/users/new",
@@ -41,43 +42,45 @@ describe("Relationships", () => {
       generateAuthenticationToken(new mongo.ObjectId(userIds[0]))
     );
     await mongoMock.sendRequest(IRequestTypes.POST, "/relationships/update", {
-      ignoreUsers: [DEFAULT_MONGOID]
+      frequency: {
+        [DEFAULT_MONGOID]: "IGNORE"
+      }
     });
-    const ignoredUsers = await mongoMock.sendRequest(
+    const relationships = await mongoMock.sendRequest(
       IRequestTypes.GET,
       "/relationships/all",
       {}
     );
-    expect(ignoredUsers.body.payload.ignoreUsers[0]).to.equal(DEFAULT_MONGOID);
-  });
-
-  it("allows a user to update multiple lists", async () => {
-    mongoMock.setAuthenticationToken(
-      generateAuthenticationToken(new mongo.ObjectId(userIds[0]))
+    expect(relationships.body.payload.frequency[DEFAULT_MONGOID]).to.equal(
+      "IGNORE"
     );
     await mongoMock.sendRequest(IRequestTypes.POST, "/relationships/update", {
-      frequentUsers: [DEFAULT_MONGOID]
+      frequency: {
+        [DEFAULT_MONGOID]: 60,
+        [MONGO_ID_1]: 30
+      }
     });
-    const ignoredUsers = await mongoMock.sendRequest(
+    const secondRelationships = await mongoMock.sendRequest(
       IRequestTypes.GET,
       "/relationships/all",
       {}
     );
-    expect(ignoredUsers.body.payload.ignoreUsers[0]).to.equal(DEFAULT_MONGOID);
-    expect(ignoredUsers.body.payload.frequentUsers[0]).to.equal(
-      DEFAULT_MONGOID
-    );
+    expect(
+      secondRelationships.body.payload.frequency[DEFAULT_MONGOID]
+    ).to.equal(60);
+    expect(secondRelationships.body.payload.frequency[MONGO_ID_1]).to.equal(30);
     await mongoMock.sendRequest(IRequestTypes.POST, "/relationships/update", {
-      ignoreUsers: []
+      frequency: {
+        [MONGO_ID_1]: "IGNORE"
+      }
     });
-    const ignoredUsers2 = await mongoMock.sendRequest(
+    const thirdRelationships = await mongoMock.sendRequest(
       IRequestTypes.GET,
       "/relationships/all",
       {}
     );
-    expect(ignoredUsers2.body.payload.ignoreUsers.length).to.equal(0);
-    expect(ignoredUsers2.body.payload.frequentUsers[0]).to.equal(
-      DEFAULT_MONGOID
+    expect(thirdRelationships.body.payload.frequency[MONGO_ID_1]).to.equal(
+      "IGNORE"
     );
   });
 });

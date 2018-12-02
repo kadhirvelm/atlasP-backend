@@ -18,12 +18,14 @@ export class RelationshipsDatabase {
     userId: mongo.ObjectId,
     relationship: Partial<IRelationship>
   ) {
-    const currentRelationships = await this.getAllRelationships(userId);
     const updatedRelationship = await this.db
       .collection(RELATIONSHIPS_COLLECTION)
       .replaceOne(
         { _id: userId },
-        { _id: userId, ...currentRelationships, ...relationship },
+        {
+          _id: userId,
+          ...relationship
+        },
         { upsert: true }
       );
     return updatedRelationship;
