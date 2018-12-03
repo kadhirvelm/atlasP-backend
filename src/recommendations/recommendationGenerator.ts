@@ -46,7 +46,7 @@ function getFrequency(
   relationships: IRelationship,
   isPremium: boolean
 ) {
-  if (!isPremium) {
+  if (!isPremium || relationships.frequency === undefined) {
     return DEFAULT_FREQUENCY_DAY_COUNT;
   }
 
