@@ -7,7 +7,9 @@ import {
 export class RelationshipsDatabase {
   constructor(private db: mongo.Db) {}
 
-  public async getAllRelationships(userId: mongo.ObjectID) {
+  public async getAllRelationships(
+    userId: mongo.ObjectID
+  ): Promise<IRelationship> {
     const allRelationships = await this.db
       .collection(RELATIONSHIPS_COLLECTION)
       .find({ _id: userId });
@@ -18,13 +20,17 @@ export class RelationshipsDatabase {
     userId: mongo.ObjectId,
     relationship: Partial<IRelationship>
   ) {
+    const { frequency } = await this.getAllRelationships(userId);
     const updatedRelationship = await this.db
       .collection(RELATIONSHIPS_COLLECTION)
       .replaceOne(
         { _id: userId },
         {
           _id: userId,
-          ...relationship
+          frequency: {
+            ...frequency,
+            ...relationship.frequency
+          }
         },
         { upsert: true }
       );
