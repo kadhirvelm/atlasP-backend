@@ -20,7 +20,7 @@ export class RelationshipsDatabase {
     userId: mongo.ObjectId,
     relationship: Partial<IRelationship>
   ) {
-    const { frequency } = await this.getAllRelationships(userId);
+    const currentRelationship = await this.getAllRelationships(userId);
     const updatedRelationship = await this.db
       .collection(RELATIONSHIPS_COLLECTION)
       .replaceOne(
@@ -28,7 +28,9 @@ export class RelationshipsDatabase {
         {
           _id: userId,
           frequency: {
-            ...frequency,
+            ...(currentRelationship == null
+              ? {}
+              : currentRelationship.frequency),
             ...relationship.frequency
           }
         },

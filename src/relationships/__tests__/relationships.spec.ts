@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { assert, expect } from "chai";
 import "mocha";
 import mongo from "mongodb";
 
@@ -10,7 +10,7 @@ import {
   MONGO_ID_1
 } from "../../utils/__tests__/usersUtils";
 
-describe("Relationships", () => {
+describe.only("Relationships", () => {
   let mongoMock: MongoMock;
   const userIds: string[] = [];
 
@@ -82,5 +82,9 @@ describe("Relationships", () => {
     expect(thirdRelationships.body.payload.frequency[MONGO_ID_1]).to.equal(
       "IGNORE"
     );
+    assert.deepEqual(thirdRelationships.body.payload.frequency, {
+      [MONGO_ID_1]: "IGNORE",
+      [DEFAULT_MONGOID]: 60
+    });
   });
 });
