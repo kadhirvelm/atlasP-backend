@@ -90,7 +90,15 @@ function generateRecommendationScores(
     const totalDaysSinceLastEvent =
       differenceBetweenDates(new Date(), latestEvent.date) -
       getFrequency(userConnection[0], relationships, isPremium);
-    const latestEventScore = totalDaysSinceLastEvent ** LATEST_EVENT_MODIFIER;
+    let latestEventScore = totalDaysSinceLastEvent ** LATEST_EVENT_MODIFIER;
+
+    /**
+     * HACK: This means this person is on the ignore list because
+     * Math.pow(-Infinity, 1.2) === Infinity, not -Infinity
+     */
+    if (latestEventScore === Infinity) {
+      latestEventScore = -1;
+    }
 
     return {
       id: userConnection[0],
