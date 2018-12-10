@@ -163,6 +163,17 @@ function getRecommendation(
     generatedRecommendation = sortedRecommendations[1];
   }
 
+  /**
+   * In the case where there was only a single recommendation in total.
+   */
+  if (generatedRecommendation === undefined) {
+    return {
+      activeUser,
+      recommendation: activeUser._id.toHexString(),
+      score: "Add a new friend"
+    };
+  }
+
   return {
     activeUser,
     recommendation: generatedRecommendation.id,
